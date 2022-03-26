@@ -14,6 +14,11 @@ async def load(ctx, extension):
 async def unload(ctx, extension):
     bot.unload_extension(f'cogs.{extension}')
 
+@bot.event
+async def on_ready():
+    print(f'\'{bot.user.name}\' is ready!')
+
+
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         bot.load_extension(f'cogs.{filename[:-3]}')
