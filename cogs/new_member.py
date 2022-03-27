@@ -1,10 +1,14 @@
 from discord.ext import commands
 import psycopg2
-
 import sys  
-sys.path.append('../')
 
+sys.path.append('../')
 from config import config
+from logger import get_logger
+
+
+logger = get_logger(__name__)
+
 
 class NewMember(commands.Cog):
         
@@ -14,9 +18,9 @@ class NewMember(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member):
         '''Add each member that joins the server to the database'''
-
         conn = None
         try:
+            logger.info("Member joined the server")
             params = config(section="postgresql")
             conn = psycopg2.connect(**params)
 
@@ -25,17 +29,19 @@ class NewMember(commands.Cog):
             
             # member doesn't exist in databse
             if cur.fetchone() == None:
+                logger.debug("- no record in a the database")
                 cur.execute("insert into member (member_id, username) values (%s, %s)", (member.id, member.name))
             
             # member do exist in database
             else:
+                logger.debug("- already exists in the database")
                 cur.execute("update member set last_join=now(), last_updated=now(), server_member=true where member_id=%s", (member.id,))
             
             conn.commit()
             cur.close()
 
         except (Exception, psycopg2.DatabaseError) as error:
-            print(error)
+            logger.exception(error)
         finally:
             if conn is not None:
                 conn.close()
@@ -65,7 +71,7 @@ class NewMember(commands.Cog):
             cur.close()
 
         except (Exception, psycopg2.DatabaseError) as error:
-            print(error)
+            logger.exception(error)
         finally:
             if conn is not None:
                 conn.close()
