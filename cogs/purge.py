@@ -1,5 +1,11 @@
 from discord.ext import commands
 import discord
+import sys  
+
+sys.path.append('../')
+from logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class Purge(commands.Cog):
@@ -23,7 +29,7 @@ class Purge(commands.Cog):
         try:
             arg1 = int(arg1)
         except ValueError:
-            print("arg1 has to be a message id")
+            logger.warn("arg1 has to be a message id")
             await ctx.send("arg1 has to be a message id")
             return
 
@@ -31,14 +37,14 @@ class Purge(commands.Cog):
             try:
                 arg2 = int(arg2)
             except ValueError:
-                print("arg2 has to a message id")
+                logger.warn("arg2 has to a message id")
                 await ctx.send("arg2 has to a message id")
                 return
 
             try:
                 await ctx.fetch_message(arg1)
             except discord.NotFound:
-                print("Couldn't find the first argument message")
+                logger.warn("Couldn't find the first argument message")
                 await ctx.send("Couldn't find the first argument message")
                 return
 
@@ -46,7 +52,7 @@ class Purge(commands.Cog):
                 try:
                     await ctx.fetch_message(arg2)
                 except discord.NotFound:
-                    print("Couldn't find the second argument message")
+                    logger.warn("Couldn't find the second argument message")
                     await ctx.send("Couldn't find the second argument message")
                     return
 

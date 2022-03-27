@@ -1,10 +1,12 @@
-import discord
 from discord.ext import commands
+import discord
 import os
 
-TOKEN = os.environ['BOT_TOKEN']
 
-bot = commands.Bot(command_prefix=';')
+TOKEN = os.environ['BOT_TOKEN']
+intents = discord.Intents.all()
+bot = commands.Bot(command_prefix=';', intents=intents)
+
 
 @bot.command()
 async def load(ctx, extension):
@@ -22,5 +24,6 @@ async def on_ready():
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         bot.load_extension(f'cogs.{filename[:-3]}')
+
 
 bot.run(TOKEN)
