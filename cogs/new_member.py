@@ -20,7 +20,8 @@ class NewMember(commands.Cog):
         '''Add each member that joins the server to the database'''
         conn = None
         try:
-            logger.info("Member joined the server")
+            logger.info(f"Member ({member.name}, {member.id}) joined the server")
+
             params = config(section="postgresql")
             conn = psycopg2.connect(**params)
 
@@ -29,7 +30,7 @@ class NewMember(commands.Cog):
             
             # member doesn't exist in the databse
             if cur.fetchone() is None:
-                logger.debug("- no record in a the database")
+                logger.debug("- no record in the database")
                 cur.execute("insert into member (member_id, username) values (%s, %s)", (member.id, member.name))
             
             # member do exist in the database
@@ -60,7 +61,7 @@ class NewMember(commands.Cog):
             cur.execute("select * from member where member_id=%s", (member.id,))
 
             # member doesn't exist in databse
-            if cur.fetchone() == None:
+            if cur.fetchone() is None:
                 cur.execute("insert into member (member_id, username, server_member) values (%s, %s, false)", (member.id, member.name))
             
             # member do exist in database
