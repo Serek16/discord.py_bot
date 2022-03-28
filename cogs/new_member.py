@@ -27,12 +27,12 @@ class NewMember(commands.Cog):
             cur = conn.cursor()
             cur.execute("select * from member where member_id=%s", (member.id,))
             
-            # member doesn't exist in databse
-            if cur.fetchone() == None:
+            # member doesn't exist in the databse
+            if cur.fetchone() is None:
                 logger.debug("- no record in a the database")
                 cur.execute("insert into member (member_id, username) values (%s, %s)", (member.id, member.name))
             
-            # member do exist in database
+            # member do exist in the database
             else:
                 logger.debug("- already exists in the database")
                 cur.execute("update member set last_join=now(), last_updated=now(), server_member=true where member_id=%s", (member.id,))
