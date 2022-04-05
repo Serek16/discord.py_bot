@@ -13,11 +13,23 @@ class Purge(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    def __is_text(self, message):
+        allowed_domains = ("https://cdn.discordapp.com/attachments/", "https://tenor.com/view/", "https://cdn.discordapp.com/attachments/")
+        if message.attachments != []:
+            return False
+        for domain in allowed_domains:
+            if domain in message.content:
+                return False
+        return True
+
     @commands.command()
     @commands.has_role(910458855023083577)
-    async def purge(self, ctx, arg1, arg2=None):
+    async def purge(self, ctx, arg1, arg2=None, only_text=False):
         '''Remove messages from the channel on which the command was used'''
         
+        if only_text == False:
+            logger.info(f"{ctx.author} used purge in {ctx.channel.name}")
+
         # if arg1 isn't None, use treat arg1 as the latest message 
         # and arg2 as the oldest message
         if arg2 != None:
@@ -67,9 +79,16 @@ class Purge(commands.Cog):
         
         # remove rest of the messages
         if arg2 == None:
-            await ctx.channel.purge(after=discord.Object(arg1))
+            await ctx.channel.purge(after=discord.Object(arg1), check=lambda m: (only_text == True and self.__is_text(m) == True))
         else:
-            await ctx.channel.purge(after=discord.Object(arg1), before=discord.Object(arg2))
+            await ctx.channel.purge(after=discord.Object(arg1), before=discord.Object(arg2), check=lambda m: (only_text == True and self.__is_text(m) == True))
+
+    
+    @commands.command()
+    @commands.has_role(910458855023083577)
+    async def purgeText(self, ctx, arg1, arg2=None):
+        logger.info(f"{ctx.author} used purgeText in {ctx.channel.name}")
+        await self.purge(ctx, arg1, arg2, True)
 
 
 def setup(bot):
