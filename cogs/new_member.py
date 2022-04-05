@@ -18,6 +18,8 @@ class NewMember(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member):
         '''Add each member that joins the server to the database'''
+        
+        logger.info(f"Member ({member.name}, {member.id}) joined the server")
         conn = None
         try:
             logger.info(f"Member ({member.name}, {member.id}) joined the server")
@@ -30,12 +32,12 @@ class NewMember(commands.Cog):
             
             # member doesn't exist in the databse
             if cur.fetchone() is None:
-                logger.debug("- no record in the database")
+                logger.debug("^ no record in the database")
                 cur.execute("insert into member (member_id, username) values (%s, %s)", (member.id, member.name))
             
             # member do exist in the database
             else:
-                logger.debug("- already exists in the database")
+                logger.debug("^ already exists in the database")
                 cur.execute("update member set last_join=now(), last_updated=now(), server_member=true where member_id=%s", (member.id,))
             
             conn.commit()
@@ -49,9 +51,10 @@ class NewMember(commands.Cog):
 
 
     @commands.Cog.listener()
-    async def on_member_leave(self, member):
+    async def on_member_remove(self, member):
         '''Update the databse when a member leave the server'''
-
+        
+        logger.info(f"Member ({member.name}, {member.id}) left the server")
         conn = None
         try:
             params = config(section="postgresql")
