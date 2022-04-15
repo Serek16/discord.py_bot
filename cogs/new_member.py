@@ -38,7 +38,7 @@ class NewMember(commands.Cog):
             # member do exist in the database
             else:
                 logger.debug("^ already exists in the database")
-                cur.execute("update member set last_join=now(), last_updated=now(), server_member=true where member_id=%s", (member.id,))
+                cur.execute("update member set last_join=now(), last_update=now(), member_left=false where member_id=%s", (member.id,))
             
             conn.commit()
             cur.close()
@@ -65,11 +65,11 @@ class NewMember(commands.Cog):
 
             # member doesn't exist in databse
             if cur.fetchone() is None:
-                cur.execute("insert into member (member_id, username, server_member) values (%s, %s, false)", (member.id, member.name))
+                cur.execute("insert into member (member_id, username, member_left) values (%s, %s, true)", (member.id, member.name))
             
             # member do exist in database
             else:
-                cur.execute("update member set last_updated=now(), server_member=false where member_id=%s", (member.id,))
+                cur.execute("update member set last_update=now(), member_left=true where member_id=%s", (member.id,))
             
             conn.commit()
             cur.close()
