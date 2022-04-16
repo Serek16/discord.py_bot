@@ -2,7 +2,7 @@ from discord.ext import commands
 import discord
 import os
 
-from discord_bot_v2.config import config
+from config import config
 
 
 TOKEN = config(section="bot_tokens")['bot']
