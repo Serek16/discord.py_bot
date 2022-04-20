@@ -1,5 +1,4 @@
 import discord
-from sqlalchemy import null
 from cogs.levels import process_level_static
 from logger import get_logger
 from config import config
@@ -43,7 +42,7 @@ class NewMember(commands.Cog):
             if row is None:
                 logger.info(f"{member.name}: no record in the database")
                 cur.execute(
-                    "insert into member (member_id, username, new_server_level_given) values (%s, %s, true)", (member.id, member.name))
+                    "insert into member (member_id, username) values (%s, %s)", (member.id, member.name))
 
             # member exists in the database
             else:
@@ -53,6 +52,11 @@ class NewMember(commands.Cog):
 
                 if row[0] >= 3:
                     newbie = False
+                
+                if self.level_processing == False and row[0] >= 1:
+                    self.level_processing = True
+                    logger.info("on_member_join: Started level processing")
+                    self.process_levels.start()
 
             params = config(section="guild_ids")
             if newbie == True and member.bot == False:
@@ -67,18 +71,14 @@ class NewMember(commands.Cog):
             if conn is not None:
                 conn.close()
 
-        if self.level_processing == False:
-            self.level_processing = True
-            logger.info("on_member_join: Started level processing")
-            self.process_levels.start()
-
 
     @tasks.loop(seconds=12.0)
     async def process_levels(self):
         if await process_level_static(self.bot) == True:
-            self.level_processing = False
-            logger.info("process_levels canceled")
             self.process_levels.cancel()
+            self.level_processing = False            
+            
+            logger.info("process_levels: Canceled")
 
 
     @commands.Cog.listener()
@@ -127,6 +127,9 @@ class NewMember(commands.Cog):
         await ctx.send("sync_database: Starting")
         logger.info("sync_database: Starting")
 
+        guild = await self.bot.fetch_guild(int(config(section="guild_ids")['guild']))
+        members = guild.members
+
         conn = None
         try:
             db_params = config(section="postgresql")
@@ -141,23 +144,27 @@ class NewMember(commands.Cog):
             cur.execute("select member_id, username, member_left from member")
             row = cur.fetchone()
 
-            guild = await self.bot.fetch_guild(int(config(section="guild_ids")['guild']))
             while row is not None:
                 member_id = row[0]
                 username = row[1]
                 member_left = row[2]
                 
                 logger.info(f"Checking: ({member_id}) {username} {member_left} [{i}/{total_member_num}]")
-                try:
-                    await guild.fetch_member(member_id)
-                    
+                
+                found = False
+                for member in members:
+                    if member.id == member_id:
+                        found = True
+                    members.remove(member)
+                
+                if found == True:
                     if member_left == True:
                         cur2.execute(
                             'update member set last_update=now(), member_left=false where member_id=%s', (member_id,))
                         logger.info(
                             f"Updated member ({member_id}) {username} member_left=false")
-                    
-                except (discord.Forbidden, discord.HTTPException) as memberNotFound:
+                
+                else:
                     if member_left == False:
                         cur2.execute(
                             'update member set last_update=now(), member_left=true where member_id=%s', (member_id,))
@@ -168,7 +175,13 @@ class NewMember(commands.Cog):
                 row = cur.fetchone()
                 i += 1
             
+            for i, member in enumerate(members):
+                logger.info(f"Member ({member.id}) {member.name} not in the database [{i}/{len(members)}]")
+                cur.execute("insert into member (member_id, username) values (%s, %s)", (member.id, member.name))
+
+            conn.commit()
             cur.close()
+
             logger.info("sync_database: Done")
             await ctx.send("sync_database: Done")
 

@@ -19,23 +19,72 @@ class Levels(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.level_channel_id = int(config("guild_ids")['level_channel'])
+        self.arcane_id = int(config("guild_ids")['arcane'])
+
+    @commands.Cog.listener("on_message")
+    async def on_message(self, message):
+        '''Get level from message sent by Arcane bot on #level-channel'''
+
+        if message.channel.id != self.level_channel_id:
+            return
+
+        if message.author != self.arcane_id:
+            return
+
+        msg = (await message.channel.history(limit=1).flatten())[0].content
+        i = msg.find("has reached level ")
+        if i == -1:
+            return
+
+        msg = msg[i + len("has reached level "):]
+
+        level = int(msg[:msg.find(". GG!")].replace("*", ""))
+        member_id = message.mentions[0].id
+        username = (await self.client.fetch_user(member_id)).name
+
+        conn = None
+        try:
+            db_params = config(section="postgresql")
+            conn = psycopg2.connect(**db_params)
+            cur = conn.cursor()
+
+            if message.guild.get_user(member_id) is None:
+                cur.execute("insert into member (member_id, username, level) values(%s,%s,%s)", (
+                    member_id, username, level))
+            else:
+                cur.execute(
+                    "update member set last_update=now(), level=%s where member_id=%s", (level, member_id,))
+
+            logger.info(
+                f"Collected level {level} from user {username} ({member_id})")
+            conn.commit()
+            cur.close()
+
+        except (Exception, psycopg2.DatabaseError) as error:
+            logger.exception(error)
+        finally:
+            if conn is not None:
+                conn.close()
 
     @tasks.loop(seconds=12.0)
-    async def process_levels(self):
+    async def process_levels(self, ctx):
         res = await process_level_static(self.bot)
         if res == True:
-            logger.info("process_levels canceled")
+            await ctx.send("process_levels: Canceled")
+            logger.info("process_levels Canceled")
             self.process_levels.cancel()
 
     @commands.command()
     async def start_levels_processing(self, ctx):
-        await ctx.send("Starting")
-        logger.info("start_levels_processing: Start")
-        self.process_levels.start()
+        await ctx.send("process_levels: Starting")
+        logger.info("process_levels: Starting")
+        self.process_levels.start(ctx)
 
     @commands.command()
     async def stop_levels_processing(self, ctx):
-        await ctx.send("Stopped")
+        await ctx.send("process_levels: Stopped")
+        logger.info("process_levels: Stopped")
         self.process_levels.cancel()
 
 
@@ -43,7 +92,7 @@ def setup(bot):
     bot.add_cog(Levels(bot))
 
 
-async def process_level_static(bot) -> bool :
+async def process_level_static(bot) -> bool:
     ''' 
         Update member level on server using level stored in database
             Returns:
@@ -82,7 +131,8 @@ async def process_level_static(bot) -> bool :
                 conn.commit()
                 cur.close()
                 conn.close()
-                logger.info(f"Updated ({member_id}) {username}'s level ({level})")
+                logger.info(
+                    f"Updated ({member_id}) {username}'s level ({level})")
                 return False
 
             try:
@@ -131,7 +181,7 @@ async def process_level_static(bot) -> bool :
     finally:
         if conn is not None:
             conn.close()
-    
+
     return False
 
 
