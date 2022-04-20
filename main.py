@@ -1,8 +1,10 @@
+import threading
 from discord.ext import commands
 import discord
 import os
 
 from config import config
+from logger import get_logger
 
 
 TOKEN = config(section="bot_tokens")['bot']
@@ -10,6 +12,23 @@ intents = discord.Intents.all()
 intents.members = True
 intents.guilds = True
 bot = commands.Bot(command_prefix=';', intents=intents)
+logger = get_logger(__name__)
+
+selfbot = None
+def init_selfbot():
+    import discum
+    global selfbot
+    selfbot = discum.Client(
+        token=config(section="bot_tokens")['selfbot'], log=False)
+    if selfbot is None:
+        logger.error("Couldn't connect to selfbot")
+    selfbot.gateway.run()
+
+def get_self_bot():
+    return selfbot
+
+self_bot_thread = threading.Thread(target=init_selfbot)
+self_bot_thread.start()
 
 
 @bot.command()
