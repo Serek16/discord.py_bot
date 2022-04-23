@@ -19,7 +19,7 @@ class Levels(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.level_channel_id = int(config("guild_ids")['level_channel'])
+        self.level_channel_id = int(config("guild_ids")['get_level_channel'])
         self.arcane_id = int(config("guild_ids")['arcane'])
 
     @commands.Cog.listener("on_message")
@@ -29,7 +29,7 @@ class Levels(commands.Cog):
         if message.channel.id != self.level_channel_id:
             return
 
-        if message.author != self.arcane_id:
+        if message.author.id != self.arcane_id:
             return
 
         msg = (await message.channel.history(limit=1).flatten())[0].content
@@ -42,6 +42,11 @@ class Levels(commands.Cog):
         level = int(msg[:msg.find(". GG!")].replace("*", ""))
         member_id = message.mentions[0].id
         username = (await self.client.fetch_user(member_id)).name
+
+        guild = self.bot.get_guild(int(config("guild_ids")['guild']))
+        member = guild.get_member(member_id)
+        if level >= 3:
+            await member.remove_roles(discord.Object(int(config("guild_ids")['newbie'])))
 
         conn = None
         try:

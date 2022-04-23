@@ -64,7 +64,7 @@ class ArchiveGuild(commands.Cog):
 
     
     @commands.Cog.listener()
-    async def on_member_join(self, member):
+    async def on_member_remove(self, member):
         '''
             Save the member how leaves the arhive server to the database to the "old_member" table.
             Tag him if he isn't member of the new server
@@ -72,6 +72,7 @@ class ArchiveGuild(commands.Cog):
 
         if member.guild.id != self.archive_guild_id:
             return
+
         logger.info(f"Member ({member.id}) {member.name} left the archive server")
 
         new_server_member = False
@@ -91,7 +92,7 @@ class ArchiveGuild(commands.Cog):
                 
             if row is not None:
                 cur.execute(
-                    "update old_member set last_update=now(), server_member=false, new_server_member=%s where member_id=%s", (member.id, new_server_member))
+                    "update old_member set last_update=now(), server_member=false, new_server_member=%s where member_id=%s", (new_server_member, member.id))
             else:
                 cur.execute("insert into old_member (member_id, username, new_server_member) values(%s, %s, %s)",
                             (member.id, member.name, new_server_member))
