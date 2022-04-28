@@ -1,3 +1,4 @@
+from curses import has_colors
 import discord
 from cogs.levels import process_level_static
 from logger import get_logger
@@ -25,7 +26,7 @@ class NewMember(commands.Cog):
             return
 
         logger.info(f"Member ({member.name}, {member.id}) joined the server")
-        
+
         newbie = True
         conn = None
         try:
@@ -52,7 +53,7 @@ class NewMember(commands.Cog):
 
                 if row[0] >= 3:
                     newbie = False
-                
+
                 if self.level_processing == False and row[0] >= 1:
                     self.level_processing = True
                     logger.info("on_member_join: Started level processing")
@@ -71,15 +72,13 @@ class NewMember(commands.Cog):
             if conn is not None:
                 conn.close()
 
-
     @tasks.loop(seconds=12.0)
     async def process_levels(self):
         if await process_level_static(self.bot) == True:
             self.process_levels.cancel()
-            self.level_processing = False            
-            
-            logger.info("process_levels: Canceled")
+            self.level_processing = False
 
+            logger.info("process_levels: Canceled")
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
@@ -128,7 +127,10 @@ class NewMember(commands.Cog):
         logger.info("sync_database: Starting")
 
         guild = await self.bot.fetch_guild(int(config(section="guild_ids")['guild']))
-        members = guild.members
+        guild_members = guild.members
+
+        booster_role_id = int(config('guild_ids')['booster_role'])
+        newbie_role_id = int(config('guild_ids')['newbie'])
 
         conn = None
         try:
@@ -141,43 +143,56 @@ class NewMember(commands.Cog):
             total_member_num = cur.fetchone()[0]
             i = 1
 
-            cur.execute("select member_id, username, member_left from member")
+            cur.execute(
+                "select member_id, username, member_left, level from member")
             row = cur.fetchone()
 
             while row is not None:
-                member_id = row[0]
-                username = row[1]
-                member_left = row[2]
-                
-                logger.info(f"Checking: ({member_id}) {username} {member_left} [{i}/{total_member_num}]")
-                
-                found = False
-                for member in members:
-                    if member.id == member_id:
-                        found = True
-                    members.remove(member)
-                
-                if found == True:
-                    if member_left == True:
+                db_member_id = row[0]
+                db_username = row[1]
+                db_member_left = row[2]
+                level = row[3]
+
+                logger.info(
+                    f"Checking: ({db_member_id}) {db_username} {db_member_left} [{i}/{total_member_num}]")
+
+                # check if the member is still on the server
+                member = None
+                for _member in guild_members:
+                    if _member.id == db_member_id:
+                        member = _member
+                    guild_members.remove(member)
+
+                # if member is still on the server
+                if member is not None:
+                    if db_member_left == True:
                         cur2.execute(
-                            'update member set last_update=now(), member_left=false where member_id=%s', (member_id,))
-                        logger.info(
-                            f"Updated member ({member_id}) {username} member_left=false")
-                
+                            'update member set last_update=now(), member_left=false where member_id=%s', (db_member_id,))
+
+                    if level >= 3:
+                        if has_role(member, newbie_role_id) == True:
+                            await member.remove_roles(discord.Object(newbie_role_id))
+                    else:
+                        if has_role(member, newbie_role_id) == False and has_role(member, booster_role_id) == False and member.bot == False:
+                            await member.add_roles(discord.Object(newbie_role_id))
+
+                # if member is no loner on the server
                 else:
-                    if member_left == False:
+                    if db_member_left == False:
                         cur2.execute(
-                            'update member set last_update=now(), member_left=true where member_id=%s', (member_id,))
-                        logger.info(
-                            f"Updated member ({member_id}) {username} member_left=true")
+                            'update member set last_update=now(), member_left=true where member_id=%s', (db_member_id,))
 
                 conn.commit()
                 row = cur.fetchone()
                 i += 1
-            
-            for i, member in enumerate(members):
-                logger.info(f"Member ({member.id}) {member.name} not in the database [{i}/{len(members)}]")
-                cur.execute("insert into member (member_id, username) values (%s, %s)", (member.id, member.name))
+
+            # Search through the rest of the list of actual server members for members that are not in the database
+            for i, member in enumerate(guild_members):
+                logger.info(
+                    f"Member ({member.id}) {member.name} not in the database [{i}/{len(guild_members)}]")
+                await member.add_roles(discord.object(newbie_role_id))
+                cur.execute(
+                    "insert into member (member_id, username) values (%s, %s)", (member.id, member.name))
 
             conn.commit()
             cur.close()
@@ -192,6 +207,13 @@ class NewMember(commands.Cog):
         finally:
             if conn is not None:
                 conn.close()
+
+
+def has_role(member, role_id):
+    for role in member.roles:
+        if role.id == role_id:
+            return True
+    return False
 
 
 def setup(bot):

@@ -10,6 +10,8 @@ def get_console_handler():
    return console_handler
 
 def get_file_handler(file_name):
+   if file_name[:-4] != '.log':
+      file_name += '.log'
    file_handler = logging.FileHandler(LOG_DIR + file_name)
    file_handler.setFormatter(FORMATTER)
    return file_handler
