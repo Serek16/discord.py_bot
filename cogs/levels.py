@@ -205,6 +205,14 @@ async def process_level_static(bot) -> bool:
 
 
 def get_role(level, guild, params):
+    if level >= 100:
+        return guild.get_role(int(params['lvl100']))
+    if level >= 90:
+        return guild.get_role(int(params['lvl90']))
+    if level >= 80:
+        return guild.get_role(int(params['lvl80']))
+    if level >= 70:
+        return guild.get_role(int(params['lvl70']))
     if level >= 60:
         return guild.get_role(int(params['lvl60']))
     elif level >= 50:
