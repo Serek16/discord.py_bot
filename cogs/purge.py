@@ -1,20 +1,23 @@
+from logger import get_logger
 from discord.ext import commands
 import discord
-import sys  
+import sys
+import numpy as np
+from config import config
 
 sys.path.append('../')
-from logger import get_logger
 
-logger = get_logger(__name__)
+logger = get_logger(__name__, __name__)
 
 
 class Purge(commands.Cog):
-    
+
     def __init__(self, bot):
         self.bot = bot
 
     def __is_text(self, message):
-        allowed_domains = ("https://cdn.discordapp.com/attachments/", "https://tenor.com/view/", "https://cdn.discordapp.com/attachments/")
+        allowed_domains = ("https://cdn.discordapp.com/attachments/",
+                           "https://tenor.com/view/", "https://cdn.discordapp.com/attachments/")
         if message.attachments != []:
             return False
         for domain in allowed_domains:
@@ -23,20 +26,20 @@ class Purge(commands.Cog):
         return True
 
     @commands.command()
-    @commands.has_role(910458855023083577)
+    @commands.has_role(int(config("guild_ids")['staff']))
     async def purge(self, ctx, arg1, arg2=None, only_text=False):
         '''Remove messages from the channel on which the command was used'''
-        
+
         if only_text == False:
             logger.info(f"{ctx.author} used purge in {ctx.channel.name}")
 
-        # if arg1 isn't None, use treat arg1 as the latest message 
+        # if arg1 isn't None, use treat arg1 as the latest message
         # and arg2 as the oldest message
         if arg2 != None:
             temp = arg1
             arg1 = arg2
             arg2 = temp
-        
+
         # check if arg1/arg2 is an int
         try:
             arg1 = int(arg1)
@@ -68,24 +71,50 @@ class Purge(commands.Cog):
                     await ctx.send("Couldn't find the second argument message")
                     return
 
+        to_delete_not_verified = []
 
-        # remove command message
-        await ctx.message.delete()
-
-        # remove first and last message separately
-        await (await ctx.channel.fetch_message(arg1)).delete()
+        # add user's command message. If the second argument isn't provided this message will be added to the list later
         if arg2 != None:
-            await (await ctx.channel.fetch_message(arg2)).delete()
-        
-        # remove rest of the messages
-        if arg2 == None:
-            await ctx.channel.purge(after=discord.Object(arg1), check=lambda m: (only_text == True and self.__is_text(m) == True))
-        else:
-            await ctx.channel.purge(after=discord.Object(arg1), before=discord.Object(arg2), check=lambda m: (only_text == True and self.__is_text(m) == True))
+            to_delete_not_verified.append(ctx.message)
 
-    
+        # add first and last message (channel.history doesn't include them)
+        to_delete_not_verified.append(await ctx.channel.fetch_message(arg1))
+        if arg2 != None:
+            to_delete_not_verified.append(await ctx.channel.fetch_message(arg2))
+
+        while True:
+            limit = 1000
+
+            # add the rest of the messages
+            if arg2 == None:
+                to_delete_not_verified += await ctx.channel.history(limit=limit, after=discord.Object(arg1), oldest_first=False).flatten()
+            else:
+                to_delete_not_verified += await ctx.channel.history(limit=limit, after=discord.Object(arg1), before=discord.Object(arg2), oldest_first=False).flatten()
+
+            if len(to_delete_not_verified) < limit:
+                break
+            else:
+                limit *= 2
+
+        # if you want to only remove text messages
+        to_delete = []
+        if only_text == True:
+            for message in to_delete_not_verified:
+                if (self.__is_text(message) == True):
+                    to_delete.append(message)
+        else:
+            to_delete = to_delete_not_verified
+
+        for chunk in list(self.__divide_chunks(to_delete, 100)):
+            print(f"chunk size: {len(chunk)}")
+            await ctx.channel.delete_messages(chunk)
+
+    def __divide_chunks(self, l, n):
+        for i in range(0, len(l), n):
+            yield l[i:i + n]
+
     @commands.command()
-    @commands.has_role(910458855023083577)
+    @commands.has_role(int(config("guild_ids")['staff']))
     async def purgeText(self, ctx, arg1, arg2=None):
         logger.info(f"{ctx.author} used purgeText in {ctx.channel.name}")
         await self.purge(ctx, arg1, arg2, True)
