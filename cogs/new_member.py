@@ -118,6 +118,7 @@ class NewMember(commands.Cog):
                 conn.close()
 
     @commands.command()
+    @commands.has_role(int(config("guild_ids")['staff']))
     async def sync_database(self, ctx):
         '''synchronize the presence of members on the server and in the database'''
 

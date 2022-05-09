@@ -95,12 +95,14 @@ class Levels(commands.Cog):
             self.process_levels.cancel()
 
     @commands.command()
+    @commands.has_role(int(config("guild_ids")['staff']))
     async def start_levels_processing(self, ctx):
         await ctx.send("process_levels: Starting")
         logger.info("process_levels: Starting")
         self.process_levels.start(ctx)
 
     @commands.command()
+    @commands.has_role(int(config("guild_ids")['staff']))
     async def stop_levels_processing(self, ctx):
         await ctx.send("process_levels: Stopped")
         logger.info("process_levels: Stopped")

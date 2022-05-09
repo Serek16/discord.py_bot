@@ -104,8 +104,9 @@ class ArchiveGuild(commands.Cog):
         finally:
             if conn is not None:
                 conn.close()
-
+ 
     @commands.command()
+    @commands.has_role(int(config("guild_ids")['staff']))
     async def database(self, ctx):
         '''Update table "old_member"'''
 
