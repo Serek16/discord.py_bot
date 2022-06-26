@@ -1,8 +1,7 @@
 import discord
-from cogs.levels import process_level_static
 from logger import get_logger
 from config import config
-from discord.ext import commands, tasks
+from discord.ext import commands
 import psycopg2
 import sys
 
@@ -15,51 +14,48 @@ class NewMember(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.level_processing = False
 
     @commands.Cog.listener()
-    async def on_member_join(self, member):
+    async def on_member_join(self, member: discord.Member):
         '''Add each member that joins the server to the database'''
 
+        # Focus only on the main server
         if member.guild.id != int(config(section="guild_ids")['guild']):
             return
 
-        logger.info(f"Member ({member.name}, {member.id}) joined the server")
+        logger.info(f"Member {member.name} ({member.id}) joined the server")
+
         newbie = True
         conn = None
         try:
             db_params = config(section="postgresql")
             conn = psycopg2.connect(**db_params)
-
             cur = conn.cursor()
+
             cur.execute(
                 "select level from member where member_id=%s", (member.id,))
-
             row = cur.fetchone()
 
-            # member doesn't exist in the databse
+            # Member doesn't exist in the databse
             if row is None:
                 logger.info(f"{member.name}: no record in the database")
                 cur.execute(
                     "insert into member (member_id, username) values (%s, %s)", (member.id, member.name))
 
-            # member exists in the database
+            # Member exists in the database
             else:
                 logger.info(f"{member.name}: already exists in the database")
                 cur.execute(
                     "update member set last_join=now(), last_update=now(), member_left=false where member_id=%s", (member.id,))
 
-                if row[0] >= 3:
+                # If level is greater than or equals 5, member is no longer a newbie
+                if row[0] >= 5:
                     newbie = False
 
-                if self.level_processing == False and row[0] >= 1:
-                    self.level_processing = True
-                    logger.info("on_member_join: Started level processing")
-                    self.process_levels.start()
-
+            guild = self.bot.get_guild((int(config(section="guild_ids")['guild'])))
             params = config(section="guild_ids")
             if newbie == True and member.bot == False:
-                await member.add_roles(self.bot.get_guild(int(params['guild'])).get_role(int(params['newbie'])))
+                await member.add_roles(guild.get_role(int(params['newbie'])))
 
             conn.commit()
             cur.close()
@@ -70,39 +66,32 @@ class NewMember(commands.Cog):
             if conn is not None:
                 conn.close()
 
-    @tasks.loop(seconds=12.0)
-    async def process_levels(self):
-        if await process_level_static(self.bot) == True:
-            self.process_levels.cancel()
-            self.level_processing = False
-
-            logger.info("process_levels: Canceled")
-
     @commands.Cog.listener()
-    async def on_member_remove(self, member):
+    async def on_member_remove(self, member: discord.Member):
         '''Update the databse when a member leave the server'''
 
+        # Focus only on the main server
         if member.guild.id != int(config(section="guild_ids")['guild']):
             return
 
-        logger.info(f"Member ({member.name}, {member.id}) left the server")
+        logger.info(f"Member {member.name} ({member.id}) left the server")
 
         conn = None
         try:
             params = config(section="postgresql")
             conn = psycopg2.connect(**params)
-
             cur = conn.cursor()
+
             cur.execute(
                 "select * from member where member_id=%s", (member.id,))
 
-            # member doesn't exist in databse
+            # Member doesn't exist in the databse
             if cur.fetchone() is None:
                 logger.info(f"{member.name}: no record in the database")
                 cur.execute(
-                    "insert into member (member_id, username, new_server_level_given, member_left) values (%s, %s, true, true)", (member.id, member.name))
+                    "insert into member (member_id, username, member_left) values (%s, %s, true)", (member.id, member.name))
 
-            # member exists in database
+            # Member exists in the database
             else:
                 logger.info(f"{member.name}: already exists in the database")
                 cur.execute(
@@ -125,12 +114,12 @@ class NewMember(commands.Cog):
         await ctx.send("sync_database: Starting")
         logger.info("sync_database: Starting")
 
-        guild = await self.bot.fetch_guild(int(config(section="guild_ids")['guild']))
-
+        guild = self.bot.get_guild((int(config(section="guild_ids")['guild'])))
         guild_members = guild.members
 
-        booster_role_id = int(config('guild_ids')['booster_role'])
+        booster_role_id = int(config('guild_ids')['booster'])
         newbie_role_id = int(config('guild_ids')['newbie'])
+        no_newbie_level = int(config('guild_ids')['no_newbie_level'])
 
         conn = None
         try:
@@ -161,7 +150,7 @@ class NewMember(commands.Cog):
                 for _member in guild_members:
                     if _member.id == db_member_id:
                         member = _member
-                    guild_members.remove(member)
+                        guild_members.remove(member)
 
                 # if member is still on the server
                 if member is not None:
@@ -169,7 +158,7 @@ class NewMember(commands.Cog):
                         cur2.execute(
                             'update member set last_update=now(), member_left=false where member_id=%s', (db_member_id,))
 
-                    if level >= 3:
+                    if level >= no_newbie_level:
                         if has_role(member, newbie_role_id) == True:
                             await member.remove_roles(discord.Object(newbie_role_id))
                     else:
@@ -186,15 +175,15 @@ class NewMember(commands.Cog):
                 row = cur.fetchone()
                 i += 1
 
-            # Search through the rest of the list of actual server members for members that are not in the database
+            # Search through members that are on the server but are not in the database
             for i, member in enumerate(guild_members):
                 logger.info(
                     f"Member ({member.id}) {member.name} not in the database [{i}/{len(guild_members)}]")
-                await member.add_roles(discord.object(newbie_role_id))
+                await member.add_roles(discord.Object(newbie_role_id))
                 cur.execute(
                     "insert into member (member_id, username) values (%s, %s)", (member.id, member.name))
+                conn.commit()
 
-            conn.commit()
             cur.close()
 
             logger.info("sync_database: Done")
@@ -214,6 +203,7 @@ def has_role(member, role_id):
         if role.id == role_id:
             return True
     return False
+
 
 def setup(bot):
     bot.add_cog(NewMember(bot))

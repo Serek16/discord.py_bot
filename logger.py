@@ -19,8 +19,9 @@ def get_file_handler(file_name):
 def get_logger(logger_name, file_name = "discord_bot.log"):
    logger = logging.getLogger(logger_name)
    logger.setLevel(logging.DEBUG)
+   
    logger.addHandler(get_console_handler())
    logger.addHandler(get_file_handler(file_name))
-   # with this pattern, it's rarely necessary to propagate the error up to parent
+   
    logger.propagate = False
    return logger

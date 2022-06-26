@@ -1,6 +1,5 @@
 from logger import get_logger
 from discord.ext import commands
-import discord
 import sys
 from config import config
 
@@ -35,13 +34,12 @@ class Purge(commands.Cog):
             dates_before = (await ctx.fetch_message(arg2)).created_at
 
         await ctx.message.delete()
-        purged = await ctx.channel.purge(limit = 1000, check=lambda msg:
-                                (dates_before <= msg.created_at) and
-                                (arg2 is None or dates_after >= msg.created_at) and
-                                (not only_text or self.__is_text(msg)))
+        purged = await ctx.channel.purge(limit=1000, check=lambda msg:
+                                         (dates_before <= msg.created_at) and
+                                         (arg2 is None or dates_after >= msg.created_at) and
+                                         (not only_text or self.__is_text(msg)))
 
         logger.info(f"purged {len(purged)} messages")
-
 
     @commands.command()
     @commands.has_role(int(config("guild_ids")['staff']))

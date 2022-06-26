@@ -24,7 +24,7 @@ def init_selfbot():
         logger.error("Couldn't connect to selfbot")
     selfbot.gateway.run()
 
-def get_self_bot():
+def getSelfBot():
     return selfbot
 
 self_bot_thread = threading.Thread(target=init_selfbot)
