@@ -14,8 +14,11 @@ class Purge(commands.Cog):
         self.bot = bot
 
     def __is_text(self, message):
-        allowed_domains = ("https://cdn.discordapp.com/attachments/",
-                           "https://tenor.com/view/", "https://cdn.discordapp.com/attachments/")
+        '''Check if give message is a text message.\n
+            If it's a link leading to one of the allowed domains it's not consifered a text message'''
+        
+        allowed_domains = ("https://cdn.discordapp.com/attachments/", "https://discord.com/channels/",
+                           "https://tenor.com/view/")
         if message.attachments != []:
             return False
         for domain in allowed_domains:
@@ -26,7 +29,12 @@ class Purge(commands.Cog):
     @commands.command()
     @commands.has_role(int(config("guild_ids")['staff']))
     async def purge(self, ctx, arg1, arg2=None, only_text=False):
-        '''Remove messages from the channel on which the command was used'''
+        '''Remove messages from the channel on which the command was used
+            if arg2 is None, then delete all messages to message with arg1 id.
+            Otherwise delete all messages from message with id arg1 to message with id arg2'''
+
+        if only_text == False:
+            logger.info(f"{ctx.author} used purge in {ctx.channel.name}")
 
         dates_before = (await ctx.fetch_message(arg1)).created_at
         if arg2 is not None:
@@ -44,6 +52,10 @@ class Purge(commands.Cog):
     @commands.command()
     @commands.has_role(int(config("guild_ids")['staff']))
     async def purgeText(self, ctx, arg1, arg2=None):
+        '''Remove text messages from the channel on which the command was used
+            if arg2 is None, then delete all messages to message with arg1 id.
+            Otherwise delete all messages from message with id arg1 to message with id arg2'''
+
         logger.info(f"{ctx.author} used purgeText in {ctx.channel.name}")
         await self.purge(ctx, arg1, arg2, True)
 
