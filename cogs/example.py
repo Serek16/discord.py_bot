@@ -6,6 +6,9 @@ from config import config
 sys.path.append('../')
 
 
+logger = get_logger(__name__, __name__)
+
+
 class Example(commands.Cog):
 
     def __init__(self, bot):
@@ -19,6 +22,7 @@ class Example(commands.Cog):
     @commands.has_role(int(config("guild_ids")['staff']))
     async def hello(self, ctx):
         await ctx.send("Hello World!")
+
 
 def setup(bot):
     bot.add_cog(Example(bot))
