@@ -11,13 +11,16 @@ sys.path.append('../')
 logger = get_logger(__name__, __name__)
 
 
-class Example(commands.Cog):
+class Moderation(commands.Cog):
 
     def __init__(self, bot: discord.Client):
         self.bot = bot
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
+        '''When member is banned from one of the bot's servers, 
+            automatically gets banned on any server where the bot has ban permissions'''
+            
         try:
             banned = await member.guild.fetch_ban(member)
         except discord.NotFound:
@@ -42,4 +45,4 @@ class Example(commands.Cog):
                     logger.error(err)
 
 def setup(bot):
-    bot.add_cog(Example(bot))
+    bot.add_cog(Moderation(bot))
