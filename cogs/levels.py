@@ -48,7 +48,7 @@ class Levels(commands.Cog):
 
             # If level is greater than or equals no_newbie_level, member is no longer a newbie
             if level >= get_global('newbie_level'):
-                await member.remove_roles(discord.Object(get_id_guild('newbie', guild.id)))
+                await member.remove_roles(guild.get_role(get_id_guild('newbie', guild.id)))
                 logger.debug(f"User {member.name} is no longer a newbie")
 
             conn = None

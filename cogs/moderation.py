@@ -102,8 +102,8 @@ class Moderation(commands.Cog):
         """
         
         if args[0] == None or args[0] == "":
-            await ctx.send("You have to provide valid member id.")
-            logger.warning(f"You have to provide valid member id. Current value: {args[0]}")
+            await ctx.send("You have to provide a valid member id.")
+            logger.warning(f"You have to provide a valid member id. Current value: {args[0]}")
             return
 
         # Parse arg[0] into an id
@@ -114,8 +114,8 @@ class Moderation(commands.Cog):
                 id = int(args[0])
 
         except ValueError:
-            await ctx.send("You have to provide valid member id.")
-            logger.warning(f"You have to provide valid member id. Current value: {id}")
+            await ctx.send("You have to provide a valid member id.")
+            logger.warning(f"You have to provide a valid member id. Current value: {id}")
             return
 
         user = self.bot.get_user(id)

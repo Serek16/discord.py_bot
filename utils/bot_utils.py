@@ -14,7 +14,7 @@ def get_global(value_name: str):
     return VARS['global'][value_name]
 
 def get_id_guild(value_name: str, guild_id: int):
-    for v in VARS:
+    for v in VARS['guilds']:
         if v['id'] == guild_id:
             return v[value_name]
     
