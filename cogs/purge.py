@@ -1,7 +1,6 @@
 from logger import get_logger
 from discord.ext import commands
 import sys
-from config import config
 
 sys.path.append('../')
 
@@ -27,7 +26,7 @@ class Purge(commands.Cog):
         return True
 
     @commands.command()
-    @commands.has_role(int(config("guild_ids")['staff']))
+    @commands.has_role('staff')
     async def purge(self, ctx, arg1, arg2=None, only_text=False):
         '''Remove messages from the channel on which the command was used
             if arg2 is None, then delete all messages to message with arg1 id.
@@ -50,7 +49,7 @@ class Purge(commands.Cog):
         logger.info(f"purged {len(purged)} messages")
 
     @commands.command()
-    @commands.has_role(int(config("guild_ids")['staff']))
+    @commands.has_role('staff')
     async def purgeText(self, ctx, arg1, arg2=None):
         '''Remove text messages from the channel on which the command was used
             if arg2 is None, then delete all messages to message with arg1 id.

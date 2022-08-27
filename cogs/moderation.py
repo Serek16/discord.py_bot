@@ -1,9 +1,7 @@
-from dis import dis
 from logger import get_logger
 import discord
 from discord.ext import commands
 import sys
-from config import config
 
 sys.path.append('../')
 
@@ -36,7 +34,7 @@ class Moderation(commands.Cog):
             
             logger.info(f"{member.name} ({member.id}) has been banned in {member.guild.name} ({member.guild.id}). Reason: {reason}")
 
-            user = discord.Object(member.id)
+            user = self.bot.get_user(member.id)
             
             # Ban a member in every guild that bot is in and delete messages for the last 7 days
             for guild in self.bot.guilds:
@@ -50,12 +48,19 @@ class Moderation(commands.Cog):
                 except discord.HTTPException as err:
                     logger.error(err)
 
+
     @commands.command()
-    @commands.has_role(int(config("guild_ids")['admin']))
+    @commands.has_role("Administrator")
     async def ban(self, ctx, *args):
+        """Ban command which ban a member on every server in the network.
+        Args:
+            arg1 (int): member id
+            arg2 (string): optional ban reason
+        """
         
-        if args[0] == None or args[0] == "":
-            await ctx.send("Error: arg is empty")
+        if args == None or len(args) == 0:
+            await ctx.send("You have to provide a valid member id.")
+            logger.warning(f"You have to provide a valid member id")
             return
 
         # Parse arg[0] into an id
@@ -66,10 +71,11 @@ class Moderation(commands.Cog):
                 id = int(args[0])
 
         except ValueError:
-            await ctx.send("Error: arg is not a number")
+            await ctx.send("You have to provide a valid member id.")
+            logger.warning(f"You have to provide a valid member id. Current value: {id}")
             return
 
-        user = discord.Object(id)
+        user = self.bot.get_user(id)
 
         # Ban a member in every guild that bot is in and delete messages for the last 7 days
         for guild in self.bot.guilds:
@@ -78,20 +84,26 @@ class Moderation(commands.Cog):
                 if guild.id == ctx.guild.id:
                     await guild.ban(user, reason=' '.join(args[1:]), delete_message_days=7)
                 else:
-                    await guild.ban(user, reason=f"{' '.join(args[1:])} (banned in {ctx.guild.name} [{ctx.guild.id}])", delete_message_days=7)
+                    # Add a note informaing on which server a member was originally banned
+                    await guild.ban(user, reason=f"{' '.join(args[1:])} (banned on {ctx.guild.name} [{ctx.guild.id}])", delete_message_days=7)
 
-                logger.debug(f"User {user.name} banned in {guild.name} ({guild.id})")
+                logger.debug(f"User {user.name} banned on {guild.name} ({guild.id})")
 
             except discord.HTTPException as err:
                 logger.error(err)
 
 
     @commands.command()
-    @commands.has_role(int(config("guild_ids")['staff']))
-    async def ban(self, ctx, *args):
+    @commands.has_role("Administrator")
+    async def unban(self, ctx, *args):
+        """UnBan command which ban a member on every server in the network.
+        Args:
+            arg1 (int): id of the banned member
+        """
         
         if args[0] == None or args[0] == "":
-            await ctx.send("Error: arg is empty")
+            await ctx.send("You have to provide valid member id.")
+            logger.warning(f"You have to provide valid member id. Current value: {args[0]}")
             return
 
         # Parse arg[0] into an id
@@ -102,25 +114,26 @@ class Moderation(commands.Cog):
                 id = int(args[0])
 
         except ValueError:
-            await ctx.send("Error: arg is not a number")
+            await ctx.send("You have to provide valid member id.")
+            logger.warning(f"You have to provide valid member id. Current value: {id}")
             return
 
-        user = discord.Object(id)
+        user = self.bot.get_user(id)
 
-        # Ban a member in every guild that bot is in and delete messages for the last 7 days
+        # Unban a member in every guild that bot is in
         for guild in self.bot.guilds:
             guild:discord.Guild
             try:
                 if guild.id == ctx.guild.id:
-                    await guild.ban(user, reason=' '.join(args[1:]), delete_message_days=7)
+                    await guild.unban(user)
                 else:
-                    await guild.ban(user, reason=" ".join(args[1:]) + f" (banned in {ctx.guild.name} [{ctx.guild.id}])", delete_message_days=7)
-                
-                logger.debug(f"User {user.name} banned in {guild.name} ({guild.id})")
+                    # Add a note informaing on which server a member was originally unbanned
+                    await guild.unban(user, reason="(unbanned on {ctx.guild.name} [{ctx.guild.id}])")
+
+                logger.debug(f"User {user.name} unbanned on {guild.name} ({guild.id})")
 
             except discord.HTTPException as err:
                 logger.error(err)
-
 
 def setup(bot):
     bot.add_cog(Moderation(bot))

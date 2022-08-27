@@ -1,9 +1,10 @@
 import discord
 from logger import get_logger
-from config import config
 import sys
 from discord.ext import commands
 import psycopg2
+
+from utils.bot_utils import get_global, get_id_guild, get_ids, get_postgres_credentials
 
 sys.path.append('../')
 
@@ -14,15 +15,13 @@ class Levels(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.level_channel_id = int(config("guild_ids")['get_level_channel'])
-        self.arcane_id = int(config("guild_ids")['arcane'])
 
     @commands.Cog.listener("on_message")
-    async def on_message(self, message):
+    async def on_message(self, message: discord.Message):
         '''Get level from message sent by Arcane bot on #level-channel'''
 
         # Continue if it's a message sent by Arcane in a specific level channel
-        if message.channel.id != self.level_channel_id or message.author.id != self.arcane_id:
+        if message.channel.id not in get_ids('get_levels_channel_id') or message.author.id != get_global('arcane_id'):
             return
 
         try:
@@ -44,17 +43,17 @@ class Levels(commands.Cog):
 
             logger.debug(f"member {username} ({member_id}) level: {level}")
 
-            guild = self.bot.get_guild(int(config("guild_ids")['guild']))
+            guild:discord.Guild = message.guild
             member = guild.get_member(member_id)
 
             # If level is greater than or equals no_newbie_level, member is no longer a newbie
-            if level >= int(config('guild_ids')['no_newbie_level']):
-                await member.remove_roles(discord.Object(int(config("guild_ids")['newbie'])))
+            if level >= get_global('newbie_level'):
+                await member.remove_roles(discord.Object(get_id_guild('newbie', guild.id)))
                 logger.debug(f"User {member.name} is no longer a newbie")
 
             conn = None
             try:
-                db_params = config(section="postgresql")
+                db_params = get_postgres_credentials()
                 conn = psycopg2.connect(**db_params)
                 cur = conn.cursor()
 

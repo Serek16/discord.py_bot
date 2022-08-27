@@ -1,7 +1,5 @@
-from logger import get_logger
 from discord.ext import commands
 import sys
-from config import config
 import random
 
 sys.path.append('../')

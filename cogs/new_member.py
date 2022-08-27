@@ -1,9 +1,10 @@
 import discord
 from logger import get_logger
-from config import config
 from discord.ext import commands
 import psycopg2
 import sys
+
+from utils.bot_utils import get_id_guild, get_main_guild_id, get_postgres_credentials
 
 sys.path.append('../')
 
@@ -20,7 +21,7 @@ class NewMember(commands.Cog):
         '''Add each member that joins the server to the database'''
 
         # Focus only on the main server
-        if member.guild.id != int(config(section="guild_ids")['guild']):
+        if member.guild.id != get_main_guild_id():
             return
 
         logger.info(f"Member {member.name} ({member.id}) joined the server")
@@ -28,7 +29,7 @@ class NewMember(commands.Cog):
         newbie = True
         conn = None
         try:
-            db_params = config(section="postgresql")
+            db_params = get_postgres_credentials()
             conn = psycopg2.connect(**db_params)
             cur = conn.cursor()
 
@@ -52,10 +53,9 @@ class NewMember(commands.Cog):
                 if row[0] >= 5:
                     newbie = False
 
-            guild = self.bot.get_guild((int(config(section="guild_ids")['guild'])))
-            params = config(section="guild_ids")
+            guild = member.guild
             if newbie == True and member.bot == False:
-                await member.add_roles(guild.get_role(int(params['newbie'])))
+                await member.add_roles(guild.get_role(get_id_guild('newbie', guild.id)))
 
             conn.commit()
             cur.close()
@@ -71,14 +71,14 @@ class NewMember(commands.Cog):
         '''Update the databse when a member leave the server'''
 
         # Focus only on the main server
-        if member.guild.id != int(config(section="guild_ids")['guild']):
+        if member.guild.id != get_main_guild_id():
             return
 
         logger.info(f"Member {member.name} ({member.id}) left the server")
 
         conn = None
         try:
-            params = config(section="postgresql")
+            params = get_postgres_credentials()
             conn = psycopg2.connect(**params)
             cur = conn.cursor()
 
@@ -107,23 +107,23 @@ class NewMember(commands.Cog):
                 conn.close()
 
     @commands.command()
-    @commands.has_role(int(config("guild_ids")['staff']))
-    async def sync_database(self, ctx):
+    @commands.has_role('staff')
+    async def sync_database(self, ctx: commands.Context):
         '''synchronize the presence of members on the server and in the database'''
 
         await ctx.send("sync_database: Starting")
         logger.info("sync_database: Starting")
 
-        guild = self.bot.get_guild((int(config(section="guild_ids")['guild'])))
+        guild = ctx.guild
         guild_members = guild.members
 
-        booster_role_id = int(config('guild_ids')['booster'])
-        newbie_role_id = int(config('guild_ids')['newbie'])
-        no_newbie_level = int(config('guild_ids')['no_newbie_level'])
+        booster_role_id = get_id_guild('booster')
+        newbie_role_id = get_id_guild('newbie')
+        no_newbie_level = get_id_guild('newbie_level')
 
         conn = None
         try:
-            db_params = config(section="postgresql")
+            db_params = get_postgres_credentials()
             conn = psycopg2.connect(**db_params)
             cur = conn.cursor()
             cur2 = conn.cursor()
