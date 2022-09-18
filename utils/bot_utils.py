@@ -21,7 +21,9 @@ def get_id_guild(value_name: str, guild_id: int):
     raise ValueError(f"Value with name \"{value_name}\" does not exist")
 
 def get_main_guild_id() -> int:
-    return VARS['guilds'][0]['id']
+    for guild in VARS['guilds']:
+        if guild['name'] == "main_guild":
+            return guild['id']
 
 def get_postgres_credentials() -> dict:
     vars = VARS['postgres']

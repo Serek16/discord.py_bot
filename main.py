@@ -3,7 +3,6 @@ from discord.ext import commands
 import discord
 import os
 
-from config import config
 from logger import get_logger
 from utils.bot_utils import get_global, load_vars
 
@@ -18,8 +17,7 @@ selfbot = None
 def init_selfbot():
     import discum
     global selfbot
-    selfbot = discum.Client(
-        token=config(section="bot_tokens")['selfbot'], log=False)
+    selfbot = discum.Client(get_global('selfbot_token'), log=False)
     if selfbot is None:
         logger.error("Couldn't connect to selfbot")
     selfbot.gateway.run()
@@ -54,4 +52,4 @@ for filename in os.listdir('./cogs'):
         bot.load_extension(f'cogs.{filename[:-3]}')
 
 bot.remove_command('help')
-bot.run(get_global("BOT_TOKEN"))
+bot.run(get_global("bot_token"))
