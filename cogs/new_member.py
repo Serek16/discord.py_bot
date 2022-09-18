@@ -4,7 +4,7 @@ from discord.ext import commands
 import psycopg2
 import sys
 
-from utils.bot_utils import get_id_guild, get_main_guild_id, get_postgres_credentials
+from utils.bot_utils import get_global, get_id_guild, get_main_guild_id, get_postgres_credentials
 
 sys.path.append('../')
 
@@ -117,9 +117,9 @@ class NewMember(commands.Cog):
         guild = ctx.guild
         guild_members = guild.members
 
-        booster_role_id = get_id_guild('booster')
-        newbie_role_id = get_id_guild('newbie')
-        no_newbie_level = get_id_guild('newbie_level')
+        booster_role_id = get_id_guild('booster', guild.id)
+        newbie_role_id = get_id_guild('newbie', guild.id)
+        no_newbie_level = get_global('newbie_level')
 
         conn = None
         try:
@@ -145,14 +145,14 @@ class NewMember(commands.Cog):
                 logger.info(
                     f"Checking: ({db_member_id}) {db_username} {db_member_left} [{i}/{total_member_num}]")
 
-                # check if the member is still on the server
+                # Check if the member is still on the server
                 member = None
                 for _member in guild_members:
                     if _member.id == db_member_id:
                         member = _member
                         guild_members.remove(member)
 
-                # if member is still on the server
+                # If member is still on the server
                 if member is not None:
                     if db_member_left == True:
                         cur2.execute(
@@ -162,10 +162,12 @@ class NewMember(commands.Cog):
                         if has_role(member, newbie_role_id) == True:
                             await member.remove_roles(discord.Object(newbie_role_id))
                     else:
+                        # If member's level is lower than minimal level required to no longer be a newbie and he isn't a booster nor he's a bot
+                        # and doesn't have newbie role already
                         if has_role(member, newbie_role_id) == False and has_role(member, booster_role_id) == False and member.bot == False:
                             await member.add_roles(discord.Object(newbie_role_id))
 
-                # if member is no loner on the server
+                # If member is no loner on the server
                 else:
                     if db_member_left == False:
                         cur2.execute(
@@ -175,11 +177,15 @@ class NewMember(commands.Cog):
                 row = cur.fetchone()
                 i += 1
 
+            logger.info("Searching through members that are on the server but are not in the database")
+
             # Search through members that are on the server but are not in the database
             for i, member in enumerate(guild_members):
                 logger.info(
                     f"Member ({member.id}) {member.name} not in the database [{i}/{len(guild_members)}]")
-                await member.add_roles(discord.Object(newbie_role_id))
+                # Assume that he's a newbie because level progressing level module hasn't yet saved his profile in the database
+                if has_role(member, 'booster_id') == False:
+                    await member.add_roles(discord.Object(newbie_role_id))
                 cur.execute(
                     "insert into member (member_id, username) values (%s, %s)", (member.id, member.name))
                 conn.commit()
