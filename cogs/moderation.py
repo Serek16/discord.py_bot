@@ -135,5 +135,5 @@ class Moderation(commands.Cog):
             except discord.HTTPException as err:
                 logger.error(err)
 
-def setup(bot):
-    bot.add_cog(Moderation(bot))
+async def setup(bot):
+    await bot.add_cog(Moderation(bot))

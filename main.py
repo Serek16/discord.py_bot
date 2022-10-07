@@ -2,6 +2,7 @@ import threading
 from discord.ext import commands
 import discord
 import os
+import asyncio
 
 from logger import get_logger
 from utils.bot_utils import get_global, load_vars
@@ -26,30 +27,23 @@ def init_selfbot():
 def getSelfBot():
     return selfbot
 
-
 self_bot_thread = threading.Thread(target=init_selfbot)
 self_bot_thread.start()
-
-
-@bot.command()
-async def load(ctx, extension):
-    bot.load_extension(f'cogs.{extension}')
-
-
-@bot.command()
-async def unload(ctx, extension):
-    bot.unload_extension(f'cogs.{extension}')
-
-
+load_vars()
 @bot.event
 async def on_ready():
     print(f'\'{bot.user.name}\' is ready!')
 
-load_vars()
+async def load_extensions():
+    for filename in os.listdir("./cogs"):
+        if filename.endswith(".py"):
+            # cut off the .py from the file name
+            await bot.load_extension(f"cogs.{filename[:-3]}")
 
-for filename in os.listdir('./cogs'):
-    if filename.endswith('.py'):
-        bot.load_extension(f'cogs.{filename[:-3]}')
+async def main():
+    async with bot:
+        await load_extensions()
+        bot.remove_command('help')
+        await bot.start(get_global("bot_token"))
 
-bot.remove_command('help')
-bot.run(get_global("bot_token"))
+asyncio.run(main())

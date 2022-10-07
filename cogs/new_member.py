@@ -115,7 +115,7 @@ class NewMember(commands.Cog):
         logger.info("sync_database: Starting")
 
         guild = ctx.guild
-        guild_members = guild.members
+        guild_members = list(guild.members)
 
         booster_role_id = get_id_guild('booster', guild.id)
         newbie_role_id = get_id_guild('newbie', guild.id)
@@ -211,5 +211,5 @@ def has_role(member, role_id):
     return False
 
 
-def setup(bot):
-    bot.add_cog(NewMember(bot))
+async def setup(bot):
+    await bot.add_cog(NewMember(bot))

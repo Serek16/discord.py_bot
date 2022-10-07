@@ -59,5 +59,5 @@ class Purge(commands.Cog):
         await self.purge(ctx, arg1, arg2, True)
 
 
-def setup(bot):
-    bot.add_cog(Purge(bot))
+async def setup(bot):
+    await bot.add_cog(Purge(bot))

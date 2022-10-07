@@ -34,5 +34,3 @@ def fetchMembersLevel(member_id: int, bot: discord.Client):
             print(type(msg))
             # level = pytesseract.image_to_string()
             # return level
-
-

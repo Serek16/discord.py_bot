@@ -83,5 +83,5 @@ class Levels(commands.Cog):
             logger.exception(error)
 
 
-def setup(bot):
-    bot.add_cog(Levels(bot))
+async def setup(bot):
+    await bot.add_cog(Levels(bot))

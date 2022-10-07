@@ -41,5 +41,5 @@ class Responses(commands.Cog):
                 await message.channel.send("yes :clap: you :clap: are")
 
 
-def setup(bot):
-    bot.add_cog(Responses(bot))
+async def setup(bot):
+    await bot.add_cog(Responses(bot))
