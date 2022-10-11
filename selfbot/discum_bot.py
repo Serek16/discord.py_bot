@@ -2,10 +2,7 @@ from discum.utils.slash import SlashCommander
 import discum
 
 from threading import Thread
-from slash_command import SlashCommand
-from logger import get_logger
-
-logger = get_logger(__name__, __name__)
+from selfbot.slash_command import SlashCommand
 
 
 class DiscumBot:
@@ -40,7 +37,3 @@ class DiscumBot:
         s = SlashCommander(slash_cmds)
         data = s.get([command_name], inputs=command_args)
         self.client.triggerSlashCommand(bot_id, channelID=channel_id, guildID=guild_id, data=data)
-
-        logger.info(
-            f'command_name: {command_name}, command_args: {command_args}, bot_id: {bot_id}, guild_id: {guild_id}, '
-            f'channel_id: {channel_id}')

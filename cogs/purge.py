@@ -1,8 +1,5 @@
 from logger import get_logger
 from discord.ext import commands
-import sys
-
-sys.path.append('../')
 
 logger = get_logger(__name__, __name__)
 
@@ -12,13 +9,14 @@ class Purge(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    def __is_text(self, message):
-        '''Check if give message is a text message.\n
-            If it's a link leading to one of the allowed domains it's not consifered a text message'''
-        
+    @staticmethod
+    def __is_text(message):
+        """Check if given message is a text message.\n
+            If it's a link leading to one of the allowed domains it's not considered a text message"""
+
         allowed_domains = ("https://cdn.discordapp.com/attachments/", "https://discord.com/channels/",
                            "https://tenor.com/view/")
-        if message.attachments != []:
+        if message.attachments:
             return False
         for domain in allowed_domains:
             if domain in message.content:
@@ -28,11 +26,11 @@ class Purge(commands.Cog):
     @commands.command()
     @commands.has_role('staff')
     async def purge(self, ctx, arg1, arg2=None, only_text=False):
-        '''Remove messages from the channel on which the command was used
+        """Remove messages from the channel on which the command was used
             if arg2 is None, then delete all messages to message with arg1 id.
-            Otherwise delete all messages from message with id arg1 to message with id arg2'''
+            Otherwise, delete all messages from message with id arg1 to message with id arg2"""
 
-        if only_text == False:
+        if only_text is False:
             logger.info(f"{ctx.author} used purge in {ctx.channel.name}")
 
         dates_before = (await ctx.fetch_message(arg1)).created_at
@@ -51,9 +49,9 @@ class Purge(commands.Cog):
     @commands.command()
     @commands.has_role('staff')
     async def purgeText(self, ctx, arg1, arg2=None):
-        '''Remove text messages from the channel on which the command was used
+        """Remove text messages from the channel on which the command was used
             if arg2 is None, then delete all messages to message with arg1 id.
-            Otherwise delete all messages from message with id arg1 to message with id arg2'''
+            Otherwise, delete all messages from message with id arg1 to message with id arg2"""
 
         logger.info(f"{ctx.author} used purgeText in {ctx.channel.name}")
         await self.purge(ctx, arg1, arg2, True)

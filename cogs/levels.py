@@ -1,12 +1,9 @@
 import discord
 from logger import get_logger
-import sys
 from discord.ext import commands
 import psycopg2
 
 from utils.bot_utils import get_global, get_id_guild, get_ids, get_postgres_credentials
-
-sys.path.append('../')
 
 logger = get_logger(__name__, __name__)
 
@@ -18,7 +15,7 @@ class Levels(commands.Cog):
 
     @commands.Cog.listener("on_message")
     async def on_message(self, message: discord.Message):
-        '''Get level from message sent by Arcane bot on #level-channel'''
+        """Get level from message sent by Arcane bot on #level-channel"""
 
         # Continue if it's a message sent by Arcane in a specific level channel
         if message.channel.id not in get_ids('get_levels_channel_id') or message.author.id != get_global('arcane_id'):
@@ -35,7 +32,7 @@ class Levels(commands.Cog):
 
             logger.debug(f"Arcane's message: \"{msg}\"")
 
-            # Process message, extract a the level, username and member_id
+            # Process message, extract the level, username and member_id
             msg = msg[i + len("has reached level "):]
             level = int(msg[:msg.find(". GG!")].replace("*", ""))
             member_id = message.mentions[0].id
@@ -43,7 +40,7 @@ class Levels(commands.Cog):
 
             logger.debug(f"member {username} ({member_id}) level: {level}")
 
-            guild:discord.Guild = message.guild
+            guild: discord.Guild = message.guild
             member = guild.get_member(member_id)
 
             # If level is greater than or equals no_newbie_level, member is no longer a newbie
