@@ -2,7 +2,7 @@ from discum.utils.slash import SlashCommander
 import discum
 
 from threading import Thread
-from selfbot.slash_command import SlashCommand
+from src.selfbot.slash_command import SlashCommand
 
 
 class DiscumBot:

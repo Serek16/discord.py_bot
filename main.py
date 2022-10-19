@@ -3,7 +3,7 @@ import discord
 import asyncio
 import os
 
-from utils.bot_utils import get_global, load_vars
+from src.utils.bot_utils import get_global, load_vars
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=';', intents=intents)
@@ -17,10 +17,9 @@ async def on_ready():
 
 
 async def load_extensions():
-    for filename in os.listdir("./cogs"):
+    for filename in os.listdir("src/cogs"):
         if filename.endswith(".py"):
-            # cut off the .py from the file name
-            await bot.load_extension(f"cogs.{filename[:-3]}")
+            await bot.load_extension(f".{filename[:-3]}", package='src.cogs')
 
 
 async def main():

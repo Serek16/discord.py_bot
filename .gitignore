@@ -92,7 +92,6 @@ ENV/
 ### VirtualEnv template
 # Virtualenv
 # http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
-.Python
 [Bb]in
 [Ii]nclude
 [Ll]ib
@@ -151,5 +150,5 @@ crashlytics-build.properties
 fabric.properties
 
 config.ini
-config.json
+properties/config.json
 logs/*
