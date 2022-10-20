@@ -86,7 +86,7 @@ class SyncDatabase(commands.Cog):
 
             level = fetchMembersLevel(member, discum_bot)
 
-            if has_role(member, 'booster_id') is False and member.bot is False:
+            if has_role(member, 'booster_id') is False and member.bot is False and level < no_newbie_level:
                 try:
                     await member.add_roles(discord.Object(newbie_role_id))
                 except discord.HTTPException as error:
