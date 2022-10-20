@@ -43,23 +43,28 @@ def fetchMembersLevel(member: discord.Member, discum_bot: DiscumBot) -> int:
                 img_url = obj_content['attachments'][0]['url']
                 response = requests.get(img_url)
                 img = Image.open(BytesIO(response.content))
-                return retrieveLevelFromImage(img)
+                cropped_img = cropImage(img)
+                return retrieveLevelFromImage(cropped_img)
+
+
+def cropImage(img):
+    left = 140
+    top = 90
+    right = 250
+    bottom = 50
+    width, height = img.size
+    return img.crop((left, top, width - right, height - bottom))
 
 
 def retrieveLevelFromImage(img) -> int:
     img_msg = pytesseract.image_to_string(img)
     logger.debug(img_msg)
-    try:
-        level: str = \
-            (img_msg.split("evel"))[1].split("XP")[0] \
-            .replace(" ", "") \
-            .replace("O", "0") \
-            .replace("o", "0")
-        level = ''.join(x for x in level if x.isdigit())
-        if level == '':
-            level = '0'
-        return int(level)
-
-    except Exception as error:
-        logger.error(error)
-        return 0
+    level: str = \
+        (img_msg.split("Level"))[1].split("XP")[0] \
+        .replace(" ", "") \
+        .replace("O", "0") \
+        .replace("o", "0")
+    level = ''.join(x for x in level if x.isdigit())
+    if level == '':
+        level = '0'
+    return int(level)
