@@ -2,7 +2,7 @@ from datetime import datetime
 
 
 class Member:
-    def __init__(self, member_id: int, username: str, level: int, first_join: datetime = datetime.now(),
+    def __init__(self, member_id: int, username: str, level: int = 0, first_join: datetime = datetime.now(),
                  last_join: datetime = datetime.now(), last_update: datetime = datetime.now(),
                  is_banned: bool = False, member_left: bool = False):
         self._member_id = member_id

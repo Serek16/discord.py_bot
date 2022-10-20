@@ -1,8 +1,11 @@
+import datetime
+
 import discord
+
+from src.model.member import Member
+from src.utils.databaseIO import get_member_by_id, save_member
 from src.utils.logger import get_logger
 from discord.ext import commands
-import psycopg2
-
 from src.utils.bot_utils import get_global, get_id_guild, get_main_guild_id, get_postgres_credentials
 
 logger = get_logger(__name__, __name__)
@@ -24,45 +27,28 @@ class NewMember(commands.Cog):
         logger.info(f"Member {member.name} ({member.id}) joined the server")
 
         newbie = True
-        conn = None
-        try:
-            db_params = get_postgres_credentials()
-            conn = psycopg2.connect(**db_params)
-            cur = conn.cursor()
 
-            cur.execute(
-                "select level from member where member_id=%s", (member.id,))
-            row = cur.fetchone()
+        db_member = get_member_by_id(member.id)
 
-            # Member doesn't exist in the database
-            if row is None:
-                logger.info(f"{member.name}: no record in the database")
-                cur.execute(
-                    "insert into member (member_id, username) values (%s, %s)", (member.id, member.name))
+        # Member doesn't exist in the database
+        if db_member is None:
+            logger.info(f"{member.name}: no record in the database")
+            save_member(Member(member.id, member.name))
 
-            # Member exists in the database
-            else:
-                logger.info(f"{member.name}: already exists in the database")
-                cur.execute(
-                    "update member set last_join=now(), last_update=now(), member_left=false where member_id=%s",
-                    (member.id,))
+        # Member exists in the database
+        else:
+            logger.info(f"{member.name}: already exists in the database")
+            db_member.member_left = False
+            db_member.last_join = datetime.datetime.now()
+            save_member(db_member)
 
-                # If level is greater than or equals minimal required level to not be a newbie anymore
-                if row[0] >= get_global('newbie_level'):
-                    newbie = False
+            # If level is greater than or equals minimal required level to not be a newbie anymore
+            if db_member.level >= get_global('newbie_level'):
+                newbie = False
 
-            guild = member.guild
-            if newbie is True and member.bot is False:
-                await member.add_roles(guild.get_role(get_id_guild('newbie', guild.id)))
-
-            conn.commit()
-            cur.close()
-
-        except (Exception, psycopg2.DatabaseError) as error:
-            logger.exception(error)
-        finally:
-            if conn is not None:
-                conn.close()
+        guild = member.guild
+        if newbie is True and member.bot is False:
+            await member.add_roles(guild.get_role(get_id_guild('newbie', guild.id)))
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
@@ -74,36 +60,19 @@ class NewMember(commands.Cog):
 
         logger.info(f"Member {member.name} ({member.id}) left the server")
 
-        conn = None
-        try:
-            params = get_postgres_credentials()
-            conn = psycopg2.connect(**params)
-            cur = conn.cursor()
+        db_member = get_member_by_id(member.id)
 
-            cur.execute(
-                "select * from member where member_id=%s", (member.id,))
+        # Member doesn't exist in the database
+        if db_member is None:
+            logger.info(f"{member.name}: no record in the database")
+            save_member(Member(member.id, member.name, member_left=True))
 
-            # Member doesn't exist in the database
-            if cur.fetchone() is None:
-                logger.info(f"{member.name}: no record in the database")
-                cur.execute(
-                    "insert into member (member_id, username, member_left) values (%s, %s, true)",
-                    (member.id, member.name))
-
-            # Member exists in the database
-            else:
-                logger.info(f"{member.name}: already exists in the database")
-                cur.execute(
-                    "update member set last_update=now(), member_left=true where member_id=%s", (member.id,))
-
-            conn.commit()
-            cur.close()
-
-        except (Exception, psycopg2.DatabaseError) as error:
-            logger.exception(error)
-        finally:
-            if conn is not None:
-                conn.close()
+        # Member exists in the database
+        else:
+            logger.info(f"{member.name}: already exists in the database")
+            db_member.last_join = datetime.datetime.now()
+            db_member.member_left = False
+            save_member(db_member)
 
 
 async def setup(bot):

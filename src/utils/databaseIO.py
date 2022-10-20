@@ -45,6 +45,26 @@ def get_all_members() -> list[Member]:
     return user_list
 
 
+def get_member_by_id(member_id: int) -> Member | None:
+    member = None
+
+    conn = None
+    try:
+        db_params = get_postgres_credentials()
+        conn = psycopg2.connect(**db_params)
+        cur = conn.cursor()
+        member = cur.execute("select * from member where member_id = %s", (member_id,))
+        cur.close()
+
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return member
+
+
 def save_member(member: Member):
     member_id = member.member_id
     username = member.username
