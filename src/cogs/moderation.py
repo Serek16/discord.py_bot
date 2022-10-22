@@ -1,3 +1,4 @@
+from src.utils.databaseIO import get_member_by_id, save_member
 from src.utils.logger import get_logger
 import discord
 from discord.ext import commands
@@ -48,6 +49,12 @@ class Moderation(commands.Cog):
                 except discord.HTTPException as err:
                     logger.error(err)
 
+            # Change member status in the database
+            db_member = get_member_by_id(member.id)
+            db_member.member_left = True
+            db_member.is_banned = True
+            save_member(db_member)
+
     @commands.command()
     @commands.has_role("Administrator")
     async def ban(self, ctx: discord.ext.commands.Context, member_id: int | str, *reason):
@@ -94,6 +101,12 @@ class Moderation(commands.Cog):
             except Exception as err:
                 logger.error(err)
 
+        # Change member status in the database
+        db_member = get_member_by_id(member_id)
+        db_member.member_left = True
+        db_member.is_banned = True
+        save_member(db_member)
+
     @commands.command()
     @commands.has_role("Administrator")
     async def unban(self, ctx, member_id: int | str):
@@ -108,6 +121,7 @@ class Moderation(commands.Cog):
             logger.warning(f"You have to provide a valid member id. Current value: {member_id}")
             return
 
+        # get member_id value from the direct form or from a user mention - <@member_id>
         try:
             if member_id.startswith("<@"):
                 member_id = int(member_id[:2][:-1])
@@ -136,6 +150,11 @@ class Moderation(commands.Cog):
 
             except discord.HTTPException as err:
                 logger.error(err)
+
+        # Change member status in the database
+        db_member = get_member_by_id(member_id)
+        db_member.is_banned = False
+        save_member(db_member)
 
 
 async def setup(bot):
