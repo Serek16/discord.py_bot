@@ -86,15 +86,17 @@ def save_member(member: Member):
 
         if user is None:
             cur.execute(
-                "insert into member "
-                "(member_id, username, level, first_join, last_join, last_update, is_banned, member_left)"
-                "values(%s, %s, %s, %s, %s, %s, %s, %s)",
+                "insert into member"
+                " (member_id, username, level, first_join, last_join, last_update, is_banned, member_left)"
+                " values(%s, %s, %s, %s, %s, %s, %s, %s)",
                 (member_id, username, level, first_join, last_join, last_update, is_banned, member_left))
 
         else:
             cur.execute(
-                "update member set level = %s, last_join = %s, last_update = %s, is_banned = %s, member_left = %s",
-                (level, last_join, last_update, is_banned, member_left))
+                "update member set"
+                " level = %s, last_join = %s, last_update = %s, is_banned = %s, member_left = %s"
+                " where member_id = %s",
+                (level, last_join, last_update, is_banned, member_left, member_id))
 
         cur.close()
         conn.commit()

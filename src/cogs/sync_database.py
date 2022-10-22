@@ -39,10 +39,10 @@ class SyncDatabase(commands.Cog):
         for i, db_member in enumerate(db_member_list):
 
             logger.info(
-                f"Checking: ({db_member.member_id}) {db_member.username}"
-                f"[{i}/{db_member_count}]")
+                f"Checking: {db_member.username} ({db_member.member_id}) [{i}/{db_member_count}]")
 
             # Check if the member is still on the server
+            member = None
             for _member in guild_members:
                 if _member.id == db_member.member_id:
                     member = _member
@@ -50,12 +50,12 @@ class SyncDatabase(commands.Cog):
 
             # If member is still on the server
             if member is not None:
-                logger.info("- member still on the server")
+                logger.info(f" {member.name} is still on the server")
                 db_member.member_left = False
 
                 if sync_levels:
                     db_member.level = fetchMembersLevel(member, discum_bot)
-
+                    logger.debug(f"Fetched level: {db_member.level} from user {db_member.username}")
                 databaseIO.save_member(db_member)
 
                 if db_member.level >= no_newbie_level:
@@ -71,7 +71,7 @@ class SyncDatabase(commands.Cog):
 
             # If member is no loner on the server
             else:
-                logger.info("- member no longer on the server")
+                logger.info(f" {db_member.username} is no longer on the server")
                 db_member.member_left = True
                 databaseIO.save_member(db_member)
 
@@ -80,9 +80,10 @@ class SyncDatabase(commands.Cog):
         # Search through members that are on the server but are not in the database
         for i, member in enumerate(guild_members):
             logger.info(
-                f"Member ({member.id}) {member.name} not in the database [{i}/{len(guild_members)}]")
+                f"Member {member.name} ({member.id}) not in the database [{i}/{len(guild_members)}]")
 
             level = fetchMembersLevel(member, discum_bot)
+            logger.debug(f"Fetched level: {level} from user: {member.name}")
 
             if has_role(member, 'booster_id') is False and member.bot is False and level < no_newbie_level:
                 try:
