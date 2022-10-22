@@ -51,15 +51,12 @@ class SyncDatabase(commands.Cog):
 
             # If member is still on the server
             if member is not None:
-                if sync_levels:
-                    level = fetchMembersLevel(member, discum_bot)
-                    db_member.level = level
-                    db_member.member_left = False
-                    databaseIO.save_member(db_member)
+                db_member.member_left = False
 
-                else:
-                    db_member.member_left = False
-                    databaseIO.save_member(db_member)
+                if sync_levels:
+                    db_member.level = fetchMembersLevel(member, discum_bot)
+
+                databaseIO.save_member(db_member)
 
                 if db_member.level >= no_newbie_level:
                     if has_role(member, newbie_role_id):
@@ -74,7 +71,7 @@ class SyncDatabase(commands.Cog):
 
             # If member is no loner on the server
             else:
-                db_member.member_left = False
+                db_member.member_left = True
                 databaseIO.save_member(db_member)
 
         logger.info("Searching through members that are on the server but are not in the database")
