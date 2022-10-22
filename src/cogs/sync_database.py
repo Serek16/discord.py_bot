@@ -39,11 +39,10 @@ class SyncDatabase(commands.Cog):
         for i, db_member in enumerate(db_member_list):
 
             logger.info(
-                f"Checking: ({db_member.member_id}) {db_member.username} {db_member.member_left} "
+                f"Checking: ({db_member.member_id}) {db_member.username}"
                 f"[{i}/{db_member_count}]")
 
             # Check if the member is still on the server
-            member = None
             for _member in guild_members:
                 if _member.id == db_member.member_id:
                     member = _member
@@ -51,6 +50,7 @@ class SyncDatabase(commands.Cog):
 
             # If member is still on the server
             if member is not None:
+                logger.info("- member still on the server")
                 db_member.member_left = False
 
                 if sync_levels:
@@ -71,6 +71,7 @@ class SyncDatabase(commands.Cog):
 
             # If member is no loner on the server
             else:
+                logger.info("- member no longer on the server")
                 db_member.member_left = True
                 databaseIO.save_member(db_member)
 
