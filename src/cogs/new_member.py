@@ -6,7 +6,7 @@ from src.model.member import Member
 from src.utils.databaseIO import get_member_by_id, save_member
 from src.utils.logger import get_logger
 from discord.ext import commands
-from src.utils.bot_utils import get_global, get_id_guild, get_main_guild_id, get_postgres_credentials
+from src.utils.bot_utils import get_global, get_id_guild, get_main_guild_id
 
 logger = get_logger(__name__, __name__)
 
@@ -70,8 +70,7 @@ class NewMember(commands.Cog):
         # Member exists in the database
         else:
             logger.info(f"{member.name}: already exists in the database")
-            db_member.last_join = datetime.datetime.now()
-            db_member.member_left = False
+            db_member.member_left = True
             save_member(db_member)
 
 
