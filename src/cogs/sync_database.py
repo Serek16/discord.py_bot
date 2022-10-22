@@ -58,16 +58,21 @@ class SyncDatabase(commands.Cog):
                     logger.debug(f"Fetched level: {db_member.level} from user {db_member.username}")
                 databaseIO.save_member(db_member)
 
-                if db_member.level >= no_newbie_level:
-                    if has_role(member, newbie_role_id):
-                        await member.remove_roles(discord.Object(newbie_role_id))
-                else:
-                    # If member's level is lower than minimal level required to no longer be a newbie, and he
-                    # isn't a booster, nor he's a bot and doesn't have newbie role already
-                    if has_role(member, newbie_role_id) is False \
-                            and has_role(member, booster_role_id) is False \
-                            and member.bot is False:
-                        await member.add_roles(discord.Object(newbie_role_id))
+                try:
+                    if db_member.level >= no_newbie_level:
+                        if has_role(member, newbie_role_id):
+                            await member.remove_roles(discord.Object(newbie_role_id))
+                    else:
+                        # If member's level is lower than minimal level required to no longer be a newbie, and he
+                        # isn't a booster, nor he's a bot and doesn't have newbie role already
+                        if has_role(member, newbie_role_id) is False \
+                                and has_role(member, booster_role_id) is False \
+                                and member.bot is False:
+                            await member.add_roles(discord.Object(newbie_role_id))
+                except discord.HTTPException as error:
+                    # Member probably left the server while database syncing was on
+                    logger.error(error)
+                    continue
 
             # If member is no loner on the server
             else:
@@ -89,7 +94,7 @@ class SyncDatabase(commands.Cog):
                 try:
                     await member.add_roles(discord.Object(newbie_role_id))
                 except discord.HTTPException as error:
-                    # Member probably left the server while syncing was on
+                    # Member probably left the server while database syncing was on
                     logger.error(error)
                     continue
 

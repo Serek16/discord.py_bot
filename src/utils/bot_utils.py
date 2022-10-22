@@ -9,8 +9,8 @@ def load_vars():
         VARS = json.load(config_file)
 
 
-def get_ids(role_name: str):
-    return [dic.get(role_name) for dic in VARS['guilds'] if dic.get(role_name) is not None]
+def get_ids(value_name: str):
+    return [dic.get(value_name) for dic in VARS['guilds'] if dic.get(value_name) is not None]
 
 
 def get_global(value_name: str):
