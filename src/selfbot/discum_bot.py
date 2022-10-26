@@ -8,12 +8,12 @@ from src.selfbot.slash_command import SlashCommand
 class DiscumBot:
     def __init__(self, token: str, log=False):
         self.client = discum.Client(token=token, log=log)
-        self.thread = Thread(target=self.__run_client_in_thread)
-        self.thread.start()
+        self.__thread = Thread(target=self.__run_client_in_thread)
+        self.__thread.start()
 
     def __del__(self):
         self.client.gateway.close()
-        self.thread.join()
+        self.__thread.join()
 
     def __run_client_in_thread(self):
         self.client.gateway.run()

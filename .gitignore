@@ -150,5 +150,7 @@ crashlytics-build.properties
 fabric.properties
 
 config.ini
+properties/config.yml
 properties/config.json
+properties/config_v2.json
 logs/*
