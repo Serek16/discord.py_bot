@@ -2,6 +2,7 @@ from discord.ext import commands
 import discord
 import asyncio
 import os
+import sys
 
 from src.utils.bot_utils import get_global, load_vars
 
@@ -17,9 +18,14 @@ async def on_ready():
 
 
 async def load_extensions():
+    modules = sys.argv[2:]
+
     for filename in os.listdir("src/cogs"):
         if filename.endswith(".py"):
-            await bot.load_extension(f".{filename[:-3]}", package='src.cogs')
+            if len(sys.argv) == 1 or (len(sys.argv) > 1
+                                      and ((sys.argv[1] == 'allow' and filename[:-3] in modules)
+                                           or (sys.argv[1] == 'block' and filename[:-3] not in modules))):
+                await bot.load_extension(f".{filename[:-3]}", package='src.cogs')
 
 
 async def main():
