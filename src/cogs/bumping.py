@@ -16,7 +16,7 @@ class Bumping(commands.Cog):
         self.bot = bot
         self.bump.start()
 
-    @tasks.loop(minutes=30.0)
+    @tasks.loop(minutes=15.0)
     async def bump(self):
         discum_bot = DiscumBot(get_global("selfbot_token"))
         for guild_id, bump_channel_id in AllGuildVals.get('bump_channel'):
