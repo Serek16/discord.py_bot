@@ -1,9 +1,10 @@
 import logging
 import sys
+import os
 
 FORMATTER = logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(message)s")
 LOG_DIR = "./logs/"
-
+os.makedir(LOG_DIR)
 
 def get_console_handler():
     console_handler = logging.StreamHandler(sys.stdout)
