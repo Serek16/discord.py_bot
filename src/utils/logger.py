@@ -4,7 +4,9 @@ import os
 
 FORMATTER = logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(message)s")
 LOG_DIR = "./logs/"
-os.makedir(LOG_DIR)
+
+if not os.path.isdir(LOG_DIR):
+    os.mkdir(LOG_DIR)
 
 def get_console_handler():
     console_handler = logging.StreamHandler(sys.stdout)

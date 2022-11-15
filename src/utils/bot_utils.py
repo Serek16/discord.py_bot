@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 
 VARS: dict = dict()
 
@@ -7,7 +8,7 @@ VARS: dict = dict()
 def load_vars():
     if not os.path.isfile('properties/config.json'):
         print("\"properties/config.json\" config file doesn't exist")
-	sys.exit()
+        sys.exit()
     with open('properties/config.json', 'r') as config_file:
         global VARS
         VARS = json.load(config_file)

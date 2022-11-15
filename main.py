@@ -25,6 +25,7 @@ async def load_extensions():
             if len(sys.argv) == 1 or (len(sys.argv) > 1
                                       and ((sys.argv[1] == 'allow' and filename[:-3] in modules)
                                            or (sys.argv[1] == 'block' and filename[:-3] not in modules))):
+                print(f'Loading {filename}')
                 await bot.load_extension(f".{filename[:-3]}", package='src.cogs')
 
 
