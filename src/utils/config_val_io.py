@@ -1,4 +1,5 @@
 import json
+import yaml
 
 from src.utils.logger import get_logger
 
@@ -6,15 +7,15 @@ logger = get_logger(__name__, __name__)
 
 VALS = dict()
 CONFIG_FILE = 'properties/config_v2.json'
+YAML_CONFIG_FILE = 'properties/config.yaml'
 
-
-class AllGuildVals:
+class AggregatedGuildValues:
 
     @staticmethod
     def get(val_name: str) -> list:
         global VALS
         if VALS == {}:
-            load_vals()
+            load_from_file()
 
         result_list = []
         for v in VALS:
@@ -26,12 +27,12 @@ class AllGuildVals:
         return result_list
 
 
-class GuildSpecificVals:
+class GuildSpecificValues:
+
     @staticmethod
     def get(guild_id: int, val_name: str):
-        global VALS
         if VALS == {}:
-            load_vals()
+            load_from_file()
 
         for v in VALS:
             if v['guild_id'] == guild_id:
@@ -40,10 +41,9 @@ class GuildSpecificVals:
         raise KeyError(f"guild '{guild_id}' doesn't exist")
 
     @staticmethod
-    def save(guild_id: int, val_name: str, val):
-        global VALS
+    def set(guild_id: int, val_name: str, val):
         if VALS == {}:
-            load_vals()
+            load_from_file()
 
         for v in VALS:
             if v['guild_id'] == guild_id:
@@ -55,7 +55,18 @@ class GuildSpecificVals:
         raise KeyError(f"guild '{guild_id}' doesn't exist")
 
 
-def load_vals():
+class GlobalValues:
+    
+    @staticmethod
+    def get(val_name:str):
+        with open("example.yaml", "r") as file:
+            try:
+                yaml_values:dict = yaml.safe_load(file)
+                return yaml_values[val_name]
+            except yaml.YAMLError as exc:
+                logger.error(exc)
+
+def load_from_file():
     global VALS
     try:
         with open(CONFIG_FILE, 'r') as config_file:

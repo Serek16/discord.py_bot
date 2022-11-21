@@ -4,7 +4,7 @@ from discord.ext import tasks, commands
 from src.selfbot.discum_bot import DiscumBot
 from src.selfbot.slash_command import SlashCommand
 from src.utils.bot_utils import get_global
-from src.utils.config_val_io import GuildSpecificVals, AllGuildVals
+from src.utils.config_val_io import GuildSpecificValues, GlobalValues
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__, __name__)
@@ -19,7 +19,7 @@ class Bumping(commands.Cog):
     @tasks.loop(minutes=15.0)
     async def bump(self):
         discum_bot = DiscumBot(get_global("selfbot_token"))
-        for guild_id, bump_channel_id in AllGuildVals.get('bump_channel'):
+        for guild_id, bump_channel_id in GlobalValues.get('bump_channel'):
             discum_bot.sendSlashCommand(SlashCommand(guild_id, bump_channel_id, get_global('disboard_id'), 'bump'))
 
     @commands.command()
@@ -42,7 +42,7 @@ class Bumping(commands.Cog):
             await ctx.send(f"{channel} does not exist")
             return
 
-        GuildSpecificVals.save(ctx.guild.id, 'bump_channel', channel_id)
+        GuildSpecificValues.set(ctx.guild.id, 'bump_channel', channel_id)
         logger.info(f"Successfully set {channel_id} as bumping channel")
         await ctx.send(f"Successfully set <#{channel_id}> as bumping channel")
 

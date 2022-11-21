@@ -1,7 +1,7 @@
 import discord
 
 from src.utils.bot_utils import get_id_guild
-from src.utils.config_val_io import GuildSpecificVals
+from src.utils.config_val_io import GuildSpecificValues
 from src.utils.databaseIO import add_upvote, add_downvote, remove_upvote, remove_downvote, get_reaction_list
 from src.utils.logger import get_logger
 from discord.ext import commands
@@ -68,7 +68,7 @@ class Upvotes(commands.Cog):
 
         if command is None:
             channels = ''
-            for channel_id in GuildSpecificVals.get(ctx.guild.id, 'upvote_channels'):
+            for channel_id in GuildSpecificValues.get(ctx.guild.id, 'upvote_channels'):
                 channels += f'<#{channel_id}> '
             logger.debug(f"upvote channels: {channels}")
             await ctx.send(f"upvote channels: {channels}")
@@ -109,24 +109,24 @@ class Upvotes(commands.Cog):
                     await ctx.send(f"No such channel in the list <#{channel_id}>")
 
     def __add(self, guild_id: int, channel_id: int):
-        cur_channels: list = GuildSpecificVals.get(guild_id, 'upvote_channels')
+        cur_channels: list = GuildSpecificValues.get(guild_id, 'upvote_channels')
         if channel_id not in cur_channels:
             cur_channels.append(channel_id)
-            GuildSpecificVals.save(guild_id, 'upvote_channels', cur_channels)
+            GuildSpecificValues.set(guild_id, 'upvote_channels', cur_channels)
             return True
         return False
 
     def __remove(self, guild_id: int, channel_id: int):
-        cur_channels: list = GuildSpecificVals.get(guild_id, 'upvote_channels')
+        cur_channels: list = GuildSpecificValues.get(guild_id, 'upvote_channels')
         try:
             cur_channels.remove(channel_id)
-            GuildSpecificVals.save(guild_id, 'upvote_channels', cur_channels)
+            GuildSpecificValues.set(guild_id, 'upvote_channels', cur_channels)
             return True
         except ValueError:
             return False
 
     def __remove_all(self, guild_id: int):
-        GuildSpecificVals.save(guild_id, 'upvote_channels', [])
+        GuildSpecificValues.set(guild_id, 'upvote_channels', [])
 
 
 async def setup(bot):
@@ -134,7 +134,7 @@ async def setup(bot):
 
 
 def targetChannels(channel_id: int, guild_id: int) -> bool:
-    targeted_channels_id: list = GuildSpecificVals.get(guild_id, 'upvote_channels')
+    targeted_channels_id: list = GuildSpecificValues.get(guild_id, 'upvote_channels')
     for _id in targeted_channels_id:
         if _id == channel_id:
             return True
