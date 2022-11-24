@@ -3,13 +3,17 @@ import discord
 import asyncio
 import os
 import sys
+import argparse
+from src.utils.config_val_io import GlobalValues
 
-from src.utils.bot_utils import get_global, load_vars
+parser = argparse.ArgumentParser()
+parser.add_argument('-a', '--allow', nargs='+', help='list of extensions that will be loaded')
+parser.add_argument('-i', '--ignore', nargs='+', help='list of extensions that will be ignored while loading')
+
+args = parser.parse_args()
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=';', intents=intents)
-
-load_vars()
 
 
 @bot.event
@@ -18,22 +22,83 @@ async def on_ready():
 
 
 async def load_extensions():
-    modules = sys.argv[2:]
+
+    if args.allow is not None and args.ignore is not None:
+        print("Use either --allow or --ignore. Not both.")
+        sys.exit(1)
 
     for filename in os.listdir("src/cogs"):
         if filename.endswith(".py"):
-            if len(sys.argv) == 1 or (len(sys.argv) > 1
-                                      and ((sys.argv[1] == 'allow' and filename[:-3] in modules)
-                                           or (sys.argv[1] == 'block' and filename[:-3] not in modules))):
-                print(f'Loading {filename}')
-                await bot.load_extension(f".{filename[:-3]}", package='src.cogs')
+
+            # Ignore this extensions if it is NOT in allowed list
+            if args.allow is not None and filename[:-3] not in args.allow:
+                continue
+
+            # Ignore this extensions if it IS in ignored list
+            if args.ignore is not None and filename[:-3] in args.ignore:
+                continue
+
+            print(f'Loading {filename}')
+            await bot.load_extension(f".{filename[:-3]}", package='src.cogs')
 
 
 async def main():
     async with bot:
         await load_extensions()
-        bot.remove_command('help')
-        await bot.start(get_global("bot_token"))
+        bot.remove_command('help')  # Remove ";help" command
+        await bot.start(GlobalValues.get("bot_token"))
+
+
+asyncio.run(main())
+from discord.ext import commands
+import discord
+import asyncio
+import os
+import sys
+import argparse
+from src.utils.config_val_io import GlobalValues
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-a', '--allow', nargs='+', help='list of extensions that will be loaded')
+parser.add_argument('-i', '--ignore', nargs='+', help='list of extensions that will be ignored while loading')
+
+args = parser.parse_args()
+
+intents = discord.Intents.all()
+bot = commands.Bot(command_prefix=';', intents=intents)
+
+
+@bot.event
+async def on_ready():
+    print(f'\'{bot.user.name}\' is ready!')
+
+
+async def load_extensions():
+
+    if args.allow is not None and args.ignore is not None:
+        print("Use either --allow or --ignore. Not both.")
+        sys.exit(1)
+
+    for filename in os.listdir("src/cogs"):
+        if filename.endswith(".py"):
+
+            # Ignore this extensions if it NOT is in allowed list
+            if args.allow is not None and filename[:-3] not in args.allow:
+                continue
+
+            # Ignore this extensions if it IS in ignored list
+            if args.ignore is not None and filename[:-3] in args.ignore:
+                continue
+
+            print(f'Loading {filename}')
+            await bot.load_extension(f".{filename[:-3]}", package='src.cogs')
+
+
+async def main():
+    async with bot:
+        await load_extensions()
+        bot.remove_command('help')  # Remove ";help" command
+        await bot.start(GlobalValues.get("bot_token"))
 
 
 asyncio.run(main())

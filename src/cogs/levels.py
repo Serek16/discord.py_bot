@@ -1,11 +1,9 @@
 import discord
-
 from src.model.member import Member
 from src.utils.databaseIO import get_member_by_id, save_member
 from src.utils.logger import get_logger
 from discord.ext import commands
-
-from src.utils.bot_utils import get_global, get_id_guild, get_ids, get_postgres_credentials
+from src.utils.config_val_io import AggregatedGuildValues, GlobalValues, GuildSpecificValues
 
 logger = get_logger(__name__, __name__)
 
@@ -20,7 +18,7 @@ class Levels(commands.Cog):
         """Get level from message sent by Arcane bot on #level-channel"""
 
         # Continue if it's a message sent by Arcane in a specific level channel
-        if message.channel.id not in get_ids('get_levels_channel_id') or message.author.id != get_global('arcane_id'):
+        if message.channel.id not in AggregatedGuildValues.get('get_levels_channel_id') or message.author.id != GlobalValues.get('arcane_id'):
             return
 
         logger.debug("Arcane on_message")
@@ -45,8 +43,8 @@ class Levels(commands.Cog):
         member = guild.get_member(member_id)
 
         # If level is greater than or equals no_newbie_level, member is no longer a newbie
-        if level >= get_global('newbie_level'):
-            await member.remove_roles(guild.get_role(get_id_guild('newbie', guild.id)))
+        if level >= GlobalValues.get('newbie_level'):
+            await member.remove_roles(guild.get_role(GuildSpecificValues.get(guild.id, 'newbie')))
             logger.debug(f"User {member.name} is no longer a newbie")
 
         db_member = get_member_by_id(member_id)
@@ -57,7 +55,8 @@ class Levels(commands.Cog):
                 db_member.level = level
                 save_member(db_member)
 
-        logger.info(f"Collected level {level} from user {username} ({member_id})")
+        logger.info(
+            f"Collected level {level} from user {username} ({member_id})")
 
 
 async def setup(bot):

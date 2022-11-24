@@ -1,12 +1,11 @@
 import discord
-
 from src.model.member import Member
-from src.utils import databaseIO
 from src.utils.logger import get_logger
 from discord.ext import commands
-from src.utils.bot_utils import has_role, get_global, get_id_guild
+from src.utils.bot_utils import has_role
 from src.selfbot.selfbot_utils import fetchMembersLevel
 from src.selfbot.discum_bot import DiscumBot
+from src.utils.config_val_io import GlobalValues, GuildSpecificValues
 
 logger = get_logger(__name__, __name__)
 
@@ -27,11 +26,11 @@ class SyncDatabase(commands.Cog):
         guild = ctx.guild
         guild_members = list(guild.members)
 
-        booster_role_id = get_id_guild('booster', guild.id)
-        newbie_role_id = get_id_guild('newbie', guild.id)
-        no_newbie_level = get_global('newbie_level')
+        booster_role_id = GuildSpecificValues.get(guild.id, 'booster')
+        newbie_role_id = GuildSpecificValues.get(guild.id, 'newbie')
+        no_newbie_level = GlobalValues.get('newbie_level')
 
-        discum_bot = DiscumBot(get_global("selfbot_token"))
+        discum_bot = DiscumBot(GlobalValues.get("selfbot_token"))
 
         db_member_list = databaseIO.get_all_members()
         db_member_count = len(db_member_list)
@@ -55,7 +54,8 @@ class SyncDatabase(commands.Cog):
 
                 if sync_levels:
                     db_member.level = fetchMembersLevel(member, discum_bot)
-                    logger.debug(f"Fetched level: {db_member.level} from user {db_member.username}")
+                    logger.debug(
+                        f"Fetched level: {db_member.level} from user {db_member.username}")
                 databaseIO.save_member(db_member)
 
                 try:
@@ -76,11 +76,13 @@ class SyncDatabase(commands.Cog):
 
             # If member is no loner on the server
             else:
-                logger.info(f" {db_member.username} is no longer on the server")
+                logger.info(
+                    f" {db_member.username} is no longer on the server")
                 db_member.member_left = True
                 databaseIO.save_member(db_member)
 
-        logger.info("Searching through members that are on the server but are not in the database")
+        logger.info(
+            "Searching through members that are on the server but are not in the database")
 
         # Search through members that are on the server but are not in the database
         for i, member in enumerate(guild_members):

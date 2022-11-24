@@ -1,6 +1,4 @@
 import discord
-
-from src.utils.bot_utils import get_id_guild
 from src.utils.config_val_io import GuildSpecificValues
 from src.utils.databaseIO import add_upvote, add_downvote, remove_upvote, remove_downvote, get_reaction_list
 from src.utils.logger import get_logger
@@ -109,7 +107,8 @@ class Upvotes(commands.Cog):
                     await ctx.send(f"No such channel in the list <#{channel_id}>")
 
     def __add(self, guild_id: int, channel_id: int):
-        cur_channels: list = GuildSpecificValues.get(guild_id, 'upvote_channels')
+        cur_channels: list = GuildSpecificValues.get(
+            guild_id, 'upvote_channels')
         if channel_id not in cur_channels:
             cur_channels.append(channel_id)
             GuildSpecificValues.set(guild_id, 'upvote_channels', cur_channels)
@@ -117,7 +116,8 @@ class Upvotes(commands.Cog):
         return False
 
     def __remove(self, guild_id: int, channel_id: int):
-        cur_channels: list = GuildSpecificValues.get(guild_id, 'upvote_channels')
+        cur_channels: list = GuildSpecificValues.get(
+            guild_id, 'upvote_channels')
         try:
             cur_channels.remove(channel_id)
             GuildSpecificValues.set(guild_id, 'upvote_channels', cur_channels)
@@ -134,7 +134,8 @@ async def setup(bot):
 
 
 def targetChannels(channel_id: int, guild_id: int) -> bool:
-    targeted_channels_id: list = GuildSpecificValues.get(guild_id, 'upvote_channels')
+    targeted_channels_id: list = GuildSpecificValues.get(
+        guild_id, 'upvote_channels')
     for _id in targeted_channels_id:
         if _id == channel_id:
             return True

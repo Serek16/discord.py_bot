@@ -6,8 +6,8 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__, __name__)
 
 VALS = dict()
-CONFIG_FILE = 'properties/config_v2.json'
-YAML_CONFIG_FILE = 'properties/config.yaml'
+CONFIG_FILE = 'properties/config.json'
+YAML_CONFIG_FILE = 'properties/config.yml'
 
 class AggregatedGuildValues:
 
@@ -59,7 +59,7 @@ class GlobalValues:
     
     @staticmethod
     def get(val_name:str):
-        with open("example.yaml", "r") as file:
+        with open(YAML_CONFIG_FILE, "r") as file:
             try:
                 yaml_values:dict = yaml.safe_load(file)
                 return yaml_values[val_name]

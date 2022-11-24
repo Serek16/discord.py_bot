@@ -8,16 +8,16 @@ from io import BytesIO
 
 from src.selfbot.discum_bot import DiscumBot
 from src.selfbot.slash_command import SlashCommand
-from src.utils.bot_utils import get_id_guild, get_global
 from src.utils.logger import get_logger
+from src.utils.config_val_io import GlobalValues, GuildSpecificValues
 
 logger = get_logger(__name__, __name__)
 
 
 def fetchMembersLevel(member: discord.Member, discum_bot: DiscumBot) -> int:
     guild_id = member.guild.id
-    channel_id = get_id_guild('set_level_channel_guild', guild_id)
-    arcane_id = get_global('arcane_id')
+    channel_id = GuildSpecificValues.get(guild_id, 'set_level_channel_id')
+    arcane_id = GlobalValues.get('arcane_id')
     command_name = 'level'
     command_args = {'member': member.id}
 
@@ -32,7 +32,7 @@ def fetchMembersLevel(member: discord.Member, discum_bot: DiscumBot) -> int:
 
         author_id = int(obj_content['author']['id'])
 
-        if author_id != get_global('arcane_id'):
+        if author_id != GlobalValues.get('arcane_id'):
             continue
         if obj_content['content'] == '':
             continue

@@ -1,12 +1,10 @@
 import datetime
-
 import discord
-
 from src.model.member import Member
 from src.utils.databaseIO import get_member_by_id, save_member
 from src.utils.logger import get_logger
 from discord.ext import commands
-from src.utils.bot_utils import get_global, get_id_guild, get_main_guild_id
+from src.utils.config_val_io import AggregatedGuildValues, GlobalValues, GuildSpecificValues
 
 logger = get_logger(__name__, __name__)
 
@@ -21,7 +19,7 @@ class NewMember(commands.Cog):
         """Add each member that joins the server to the database"""
 
         # Focus only on the main server
-        if member.guild.id != get_main_guild_id():
+        if member.guild.id != AggregatedGuildValues.get('guild_id')[0]:
             return
 
         logger.info(f"Member {member.name} ({member.id}) joined the server")
@@ -43,19 +41,19 @@ class NewMember(commands.Cog):
             save_member(db_member)
 
             # If level is greater than or equals minimal required level to not be a newbie anymore
-            if db_member.level >= get_global('newbie_level'):
+            if db_member.level >= GlobalValues.get('newbie_level'):
                 newbie = False
 
         guild = member.guild
         if newbie is True and member.bot is False:
-            await member.add_roles(guild.get_role(get_id_guild('newbie', guild.id)))
+            await member.add_roles(guild.get_role(GuildSpecificValues.get(guild.id, 'newbie')))
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         """Update the database when a member leave the server"""
 
         # Focus only on the main server
-        if member.guild.id != get_main_guild_id():
+        if member.guild.id != AggregatedGuildValues.get('guild_id')[0]:
             return
 
         logger.info(f"Member {member.name} ({member.id}) left the server")

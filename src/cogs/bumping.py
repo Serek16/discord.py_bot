@@ -1,10 +1,8 @@
 import discord
 from discord.ext import tasks, commands
-
 from src.selfbot.discum_bot import DiscumBot
 from src.selfbot.slash_command import SlashCommand
-from src.utils.bot_utils import get_global
-from src.utils.config_val_io import GuildSpecificValues, GlobalValues
+from src.utils.config_val_io import AggregatedGuildValues, GuildSpecificValues, GlobalValues
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__, __name__)
@@ -18,9 +16,10 @@ class Bumping(commands.Cog):
 
     @tasks.loop(minutes=15.0)
     async def bump(self):
-        discum_bot = DiscumBot(get_global("selfbot_token"))
-        for guild_id, bump_channel_id in GlobalValues.get('bump_channel'):
-            discum_bot.sendSlashCommand(SlashCommand(guild_id, bump_channel_id, get_global('disboard_id'), 'bump'))
+        discum_bot = DiscumBot(GlobalValues.get("selfbot_token"))
+        for guild_id, bump_channel_id in AggregatedGuildValues.get('bump_channel'):
+            discum_bot.sendSlashCommand(SlashCommand(
+                guild_id, bump_channel_id, GlobalValues.get('disboard_id'), 'bump'))
 
     @commands.command()
     @commands.has_role('Administrator')
