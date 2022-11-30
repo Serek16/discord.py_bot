@@ -12,14 +12,14 @@ class Bumping(commands.Cog):
 
     def __init__(self, bot: discord.Client):
         self.bot = bot
+        self.selfbot = DiscumBot(GlobalValues.get("selfbot_token"))
         self.bump.start()
 
     @tasks.loop(minutes=15.0)
     async def bump(self):
-        discum_bot = DiscumBot(GlobalValues.get("selfbot_token"))
         for guild_id, bump_channel_id in AggregatedGuildValues.get('bump_channel'):
-            discum_bot.sendSlashCommand(SlashCommand(
-                guild_id, bump_channel_id, GlobalValues.get('disboard_id'), 'bump'))
+            self.selfbot.sendSlashCommand(
+                SlashCommand(guild_id, bump_channel_id, GlobalValues.get('disboard_id'), 'bump'))
 
     @commands.command()
     @commands.has_role('Administrator')
