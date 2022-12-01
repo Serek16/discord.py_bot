@@ -15,7 +15,7 @@ class AggregatedGuildValues:
     def get(val_name: str) -> list:
         global VALS
         if VALS == {}:
-            load_from_file()
+            _load_from_file()
 
         result_list = []
         for v in VALS:
@@ -32,7 +32,7 @@ class GuildSpecificValues:
     @staticmethod
     def get(guild_id: int, val_name: str):
         if VALS == {}:
-            load_from_file()
+            _load_from_file()
 
         for v in VALS:
             if v['guild_id'] == guild_id:
@@ -43,7 +43,7 @@ class GuildSpecificValues:
     @staticmethod
     def set(guild_id: int, val_name: str, val):
         if VALS == {}:
-            load_from_file()
+            _load_from_file()
 
         for v in VALS:
             if v['guild_id'] == guild_id:
@@ -66,7 +66,7 @@ class GlobalValues:
             except yaml.YAMLError as exc:
                 logger.error(exc)
 
-def load_from_file():
+def _load_from_file():
     global VALS
     try:
         with open(CONFIG_FILE, 'r') as config_file:
