@@ -6,6 +6,7 @@ from src.utils.bot_utils import has_role
 from src.selfbot.selfbot_utils import fetchMembersLevel
 from src.selfbot.discum_bot import DiscumBot
 from src.utils.config_val_io import GlobalValues, GuildSpecificValues
+from src.utils.databaseIO import get_all_members, save_member
 
 logger = get_logger(__name__, __name__)
 
@@ -32,7 +33,7 @@ class SyncDatabase(commands.Cog):
 
         discum_bot = DiscumBot(GlobalValues.get("selfbot_token"))
 
-        db_member_list = databaseIO.get_all_members()
+        db_member_list = get_all_members()
         db_member_count = len(db_member_list)
 
         for i, db_member in enumerate(db_member_list):
@@ -56,7 +57,7 @@ class SyncDatabase(commands.Cog):
                     db_member.level = fetchMembersLevel(member, discum_bot)
                     logger.debug(
                         f"Fetched level: {db_member.level} from user {db_member.username}")
-                databaseIO.save_member(db_member)
+                save_member(db_member)
 
                 try:
                     if db_member.level >= no_newbie_level:
@@ -79,7 +80,7 @@ class SyncDatabase(commands.Cog):
                 logger.info(
                     f" {db_member.username} is no longer on the server")
                 db_member.member_left = True
-                databaseIO.save_member(db_member)
+                save_member(db_member)
 
         logger.info(
             "Searching through members that are on the server but are not in the database")
@@ -100,7 +101,7 @@ class SyncDatabase(commands.Cog):
                     logger.error(error)
                     continue
 
-            databaseIO.save_member(Member(member.id, member.name, level))
+            save_member(Member(member.id, member.name, level))
 
         logger.info("sync_database: Done")
         await ctx.send("sync_database: Done")
