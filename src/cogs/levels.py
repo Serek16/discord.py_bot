@@ -31,7 +31,7 @@ class Levels(commands.Cog):
 
         logger.debug(f"Arcane's message: \"{msg}\"")
 
-        # Process message, extract the level, username and member_id
+        # Process the level message from Arcane. Extract level, username and member_id
         msg = msg[i + len("has reached level "):]
         level = int(msg[:msg.find(". GG!")].replace("*", ""))
         member_id = message.mentions[0].id
