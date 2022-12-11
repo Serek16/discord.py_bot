@@ -1,6 +1,5 @@
 import json
 import yaml
-
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__, __name__)
@@ -8,6 +7,7 @@ logger = get_logger(__name__, __name__)
 VALS = dict()
 CONFIG_FILE = 'properties/config.json'
 YAML_CONFIG_FILE = 'properties/config.yml'
+
 
 class AggregatedGuildValues:
 
@@ -17,7 +17,7 @@ class AggregatedGuildValues:
         if VALS == {}:
             _load_from_file()
 
-        result_list = []
+        result_list = list()
         for v in VALS:
             try:
                 result_list.append((v['guild_id'], v[val_name]))
@@ -56,15 +56,16 @@ class GuildSpecificValues:
 
 
 class GlobalValues:
-    
+
     @staticmethod
-    def get(val_name:str):
+    def get(val_name: str):
         with open(YAML_CONFIG_FILE, "r") as file:
             try:
-                yaml_values:dict = yaml.safe_load(file)
+                yaml_values: dict = yaml.safe_load(file)
                 return yaml_values[val_name]
             except yaml.YAMLError as exc:
                 logger.error(exc)
+
 
 def _load_from_file():
     global VALS

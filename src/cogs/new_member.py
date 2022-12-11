@@ -53,7 +53,7 @@ class NewMember(commands.Cog):
         """Update the database when a member leave the server"""
 
         # Focus only on the main server
-        if member.guild.id != AggregatedGuildValues.get('guild_id')[0]:
+        if member.guild.id != AggregatedGuildValues.get('guild_id')[0][1]:
             return
 
         logger.info(f"Member {member.name} ({member.id}) left the server")
