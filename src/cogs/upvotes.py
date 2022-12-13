@@ -8,7 +8,7 @@ logger = get_logger(__name__, __name__)
 
 UPVOTE_EMOJI = "⬆"
 DOWNVOTE_EMOJI = "⬇"
-
+LEADERBOARD_MEMBER_LIST_LENGTH = 10
 
 class Upvotes(commands.Cog):
 
@@ -49,12 +49,14 @@ class Upvotes(commands.Cog):
 
     @commands.command()
     async def leaderboard(self, ctx: commands.Context):
-        reactions = get_reaction_list(10)
+        reactions = get_reaction_list(LEADERBOARD_MEMBER_LIST_LENGTH)
         result = ""
         for i, reaction in enumerate(reactions):
             result += f"{i + 1}. <@{reaction['member_id']}> " \
                       f"- upvotes: {reaction['upvotes']}, downvotes: {reaction['downvotes']}\n"
-        await ctx.send(result)
+        
+        embed = discord.Embed(title="Top 10 members with the most upvotes", description=result, color=discord.Colour.random())
+        await ctx.send(embed=embed)
 
     @commands.has_role('Administrator')
     @commands.command()
