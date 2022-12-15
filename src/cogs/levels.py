@@ -18,7 +18,7 @@ class Levels(commands.Cog):
         """Get level from message sent by Arcane bot on #level-channel"""
 
         # Continue if it's a message sent by Arcane in a specific level channel
-        if message.channel.id not in [guild_id for tup[1] in AggregatedGuildValues.get('get_levels_channel_id')] or message.author.id != GlobalValues.get('arcane_id'):
+        if message.channel.id not in [tup[1] for tup in AggregatedGuildValues.get('get_levels_channel_id')] or message.author.id != GlobalValues.get('arcane_id'):
             return
 
         logger.debug("Arcane on_message")
