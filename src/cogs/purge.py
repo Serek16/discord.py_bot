@@ -35,18 +35,24 @@ class Purge(commands.Cog):
         if only_text is False:
             logger.info(f"{ctx.author} used purge in {ctx.channel.name}")
 
-        dates_before = (await ctx.fetch_message(arg1)).created_at
+        to_datetime = (await ctx.fetch_message(arg1)).created_at
         if arg2 is not None:
-            dates_after = dates_before
-            dates_before = (await ctx.fetch_message(arg2)).created_at
+            from_datetime = to_datetime
+            to_datetime = (await ctx.fetch_message(arg2)).created_at
 
         await ctx.message.delete()
-        purged = await ctx.channel.purge(limit=1000, check=lambda msg:
-                                         (dates_before <= msg.created_at) and
-                                         (arg2 is None or dates_after >= msg.created_at) and
+        
+        purged_total_len = 0
+        while True:
+            purged = await ctx.channel.purge(limit=100, check=lambda msg: self.__filter_message(msg, from_datetime, to_datetime, only_text=only_text)
                                          (not only_text or self.__is_text(msg)))
+            purged_total_len += len(purged)
+            
+            # Break the loop if the last purged message is as old as we intented to. If not, keep purging, take next 100 messages
+            if purged[-1].created_at <= to_datetime:
+                break
 
-        logger.info(f"purged {len(purged)} messages")
+        logger.info(f"purged {len(purged_total_len)} messages")
 
     @commands.command()
     @commands.has_role('staff')
@@ -69,8 +75,8 @@ class Purge(commands.Cog):
             -l (optional) How many messages take into account. Default value is 100
         """
 
-        from_date = ctx.message.created_at
-        to_date = None
+        from_datetime = ctx.message.created_at
+        to_datetime = None
         user_id = None
         only_text = False
         limit = 100
@@ -80,14 +86,14 @@ class Purge(commands.Cog):
             match(prefix):
                 case '-f' | '--from':
                     try:
-                        from_date = (await ctx.fetch_message(int(arg[3:]))).created_at
+                        from_datetime = (await ctx.fetch_message(int(arg[3:]))).created_at
                     except discord.NotFound:
                         await ctx.send(f"Message with id {arg[3:]} doesn't exist")
                         return
 
                 case '-t' | '--to':
                     try:
-                        to_date = (await ctx.fetch_message(int(arg[3:]))).created_at
+                        to_datetime = (await ctx.fetch_message(int(arg[3:]))).created_at
                     except discord.NotFound:
                         await ctx.send(f"Message with id {arg[3:]} doesn't exist")
                         return
@@ -103,26 +109,26 @@ class Purge(commands.Cog):
                 case '-l' | '--limit':
                     limit = int(arg[3:])
 
-        # argument to_date is necessary for the command to work
-        if to_date is None:
+        # argument to_datetime is necessary for the command to work
+        if to_datetime is None:
             await ctx.send("You have to specify -t <message-id>. Where message-id is ID of the message where purge ends")
             logger.error("You have to specify -t <message-id>. Where message-id is ID of the message where purge ends")
             return
 
         await ctx.message.delete()
-        purged = await ctx.channel.purge(limit=limit, check=lambda msg: self.__filter_message(msg, from_date, to_date, user_id, only_text))
+        purged = await ctx.channel.purge(limit=limit, check=lambda msg: self.__filter_message(msg, from_datetime, to_datetime, user_id, only_text))
 
         logger.info(f"purged {len(purged)} messages")
 
 
     @staticmethod
-    def __filter_message(msg: discord.Message, from_date: datetime, to_date: datetime, user_id: int, only_text: bool) -> bool:
-        # If the message is younger than purge begin message 
-        if msg.created_at >= from_date:
+    def __filter_message(msg: discord.Message, from_datetime: datetime = datetime.now(), to_datetime: datetime = None, user_id: int = None, only_text: bool = False) -> bool:
+        # If the message is younger than the purge begin message 
+        if msg.created_at >= from_datetime:
             return False
         
         # If the message is older than the purge end message
-        if to_date is not None and msg.created_at <= to_date:
+        if to_datetime is not None and msg.created_at <= to_datetime:
             return False
 
         # If the message isn't a text
