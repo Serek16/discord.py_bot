@@ -11,7 +11,7 @@ logger = get_logger(__name__, __name__)
 class Levels(commands.Cog):
 
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: discord.Client = bot
 
     @commands.Cog.listener("on_message")
     async def on_message(self, message: discord.Message):
@@ -24,11 +24,16 @@ class Levels(commands.Cog):
         logger.debug("Arcane on_message")
 
         # It has to be specific message sent by Arcane "@username has reached level <level> ..."
-        msg = ((await message.channel.history(limit=1)).flatten())[0].content
-        i = msg.find("has reached level ")
-        if i == -1:
-            return
-
+        msg = str
+        try:
+            async for _msg in message.channel.history(limit=1):
+                msg = _msg
+                i = msg.content.find("has reached level ")
+                if i == -1:
+                    return
+        except Exception as e:
+            logger.error(e)
+        
         logger.debug(f"Arcane's message: \"{msg}\"")
 
         # Process the level message from Arcane. Extract level, username and member_id
