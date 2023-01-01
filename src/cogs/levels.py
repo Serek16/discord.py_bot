@@ -4,6 +4,7 @@ from src.utils.databaseIO import get_member_by_id, save_member
 from src.utils.logger import get_logger
 from discord.ext import commands
 from src.utils.config_val_io import AggregatedGuildValues, GlobalValues, GuildSpecificValues
+from src.utils.bot_utils import has_role
 
 logger = get_logger(__name__, __name__)
 
@@ -25,14 +26,11 @@ class Levels(commands.Cog):
 
         # It has to be specific message sent by Arcane "@username has reached level <level> ..."
         msg = str
-        try:
-            async for _msg in message.channel.history(limit=1):
-                msg = _msg
-                i = msg.content.find("has reached level ")
-                if i == -1:
-                    return
-        except Exception as e:
-            logger.error(e)
+        async for _msg in message.channel.history(limit=1):
+            msg = _msg.content
+            i = msg.find("has reached level ")
+            if i == -1:
+                return
         
         logger.debug(f"Arcane's message: \"{msg}\"")
 
@@ -49,8 +47,9 @@ class Levels(commands.Cog):
 
         # If level is greater than or equals no_newbie_level, member is no longer a newbie
         if level >= GlobalValues.get('newbie_level'):
-            await member.remove_roles(guild.get_role(GuildSpecificValues.get(guild.id, 'newbie')))
-            logger.debug(f"User {member.name} is no longer a newbie")
+            if (has_role(member, GuildSpecificValues.get(guild.id, 'newbie'))):
+                await member.remove_roles(guild.get_role(GuildSpecificValues.get(guild.id, 'newbie')))
+                logger.debug(f"User {member.name} is no longer a newbie")
 
         db_member = get_member_by_id(member_id)
         if db_member is None:
