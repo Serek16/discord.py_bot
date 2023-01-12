@@ -1,7 +1,8 @@
-from src.utils.databaseIO import get_member_by_id, save_member
-from src.utils.logger import get_logger
 import discord
 from discord.ext import commands
+
+from src.utils.databaseIO import get_member_by_id, save_member
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__, __name__)
 

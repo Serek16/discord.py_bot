@@ -1,14 +1,16 @@
 import discord
+from discord.ext import commands
+
 from src.utils.config_val_io import GuildSpecificValues
 from src.utils.databaseIO import add_upvote, add_downvote, remove_upvote, remove_downvote, get_reaction_list
 from src.utils.logger import get_logger
-from discord.ext import commands
 
 logger = get_logger(__name__, __name__)
 
 UPVOTE_EMOJI = "⬆"
 DOWNVOTE_EMOJI = "⬇"
 LEADERBOARD_MEMBER_LIST_LENGTH = 10
+
 
 class Upvotes(commands.Cog):
 
@@ -54,8 +56,9 @@ class Upvotes(commands.Cog):
         for i, reaction in enumerate(reactions):
             result += f"{i + 1}. <@{reaction['member_id']}> " \
                       f"- upvotes: {reaction['upvotes']}, downvotes: {reaction['downvotes']}\n"
-        
-        embed = discord.Embed(title="Top 10 members with the most upvotes", description=result, color=discord.Colour.random())
+
+        embed = discord.Embed(title="Top 10 members with the most upvotes", description=result,
+                              color=discord.Colour.random())
         await ctx.send(embed=embed)
 
     @commands.has_role('Administrator')

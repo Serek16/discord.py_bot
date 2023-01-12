@@ -1,4 +1,5 @@
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import sys
 import os
 
@@ -7,6 +8,7 @@ LOG_DIR = "./logs/"
 
 if not os.path.isdir(LOG_DIR):
     os.mkdir(LOG_DIR)
+
 
 def _get_console_handler():
     console_handler = logging.StreamHandler(sys.stdout)
@@ -17,7 +19,7 @@ def _get_console_handler():
 def _get_file_handler(file_name):
     if file_name[:-4] != '.log':
         file_name += '.log'
-    file_handler = logging.FileHandler(LOG_DIR + file_name)
+    file_handler = TimedRotatingFileHandler(LOG_DIR + file_name, when='D', interval=1, backupCount=7)
     file_handler.setFormatter(FORMATTER)
     return file_handler
 

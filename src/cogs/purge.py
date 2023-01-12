@@ -1,7 +1,11 @@
-from src.utils.logger import get_logger
-from discord.ext import commands
+import argparse
+import shlex
 from datetime import datetime
+
 import discord
+from discord.ext import commands
+
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__, __name__)
 
@@ -35,24 +39,28 @@ class Purge(commands.Cog):
         if only_text is False:
             logger.info(f"{ctx.author} used purge in {ctx.channel.name}")
 
+        from_datetime = ctx.message.created_at
         to_datetime = (await ctx.fetch_message(arg1)).created_at
+
         if arg2 is not None:
             from_datetime = to_datetime
             to_datetime = (await ctx.fetch_message(arg2)).created_at
 
         await ctx.message.delete()
-        
+
         purged_total_len = 0
         while True:
-            purged = await ctx.channel.purge(limit=100, check=lambda msg: self.__filter_message(msg, from_datetime, to_datetime, only_text=only_text)
-                                         (not only_text or self.__is_text(msg)))
+            purged = await ctx.channel.purge(limit=100,
+                                             check=lambda msg: self.__filter_message(msg, from_datetime, to_datetime,
+                                                                                     only_text=only_text))
             purged_total_len += len(purged)
-            
-            # Break the loop if the last purged message is as old as we intented to. If not, keep purging, take next 100 messages
+
+            # Break the loop if the last purged message is as old as we intended to. If not, keep purging, take next
+            # 100 messages
             if purged[-1].created_at <= to_datetime:
                 break
 
-        logger.info(f"purged {len(purged_total_len)} messages")
+        logger.info(f"purged {purged_total_len} messages")
 
     @commands.command()
     @commands.has_role('staff')
@@ -66,67 +74,69 @@ class Purge(commands.Cog):
 
     @commands.command()
     @commands.has_role('staff')
-    async def purgeCLI(self, ctx: commands.Context, *args):
+    async def purgeCLI(self, ctx: commands.Context, *, args: str):
         """Remove messages from the channel providing arguments
             -f --from (optional) ID of the message from which purge will begin
             -t --to ID of the message where purge ends
             -u --user ID of user whose only messages will be deleted
             --only-text (optional) Delete only text messages
-            -l (optional) How many messages take into account. Default value is 100
+            -l --limit How many messages will be taken from chat history into account
         """
 
-        from_datetime = ctx.message.created_at
-        to_datetime = None
-        user_id = None
-        only_text = False
-        limit = 100
+        parser = argparse.ArgumentParser()
+        parser.add_argument("-f", "--from", dest="_from", type=int)
+        parser.add_argument("-t", "--to", dest="to", type=int)
+        parser.add_argument("-u", "--user", dest="user", type=int)
+        parser.add_argument("--only-text", dest="only_text", action="store_true")
+        parser.add_argument("-l", "--limit", dest="limit", default=100, type=int)
 
-        for arg in args:
-            prefix: str = arg[:2]
-            match(prefix):
-                case '-f' | '--from':
-                    try:
-                        from_datetime = (await ctx.fetch_message(int(arg[3:]))).created_at
-                    except discord.NotFound:
-                        await ctx.send(f"Message with id {arg[3:]} doesn't exist")
-                        return
-
-                case '-t' | '--to':
-                    try:
-                        to_datetime = (await ctx.fetch_message(int(arg[3:]))).created_at
-                    except discord.NotFound:
-                        await ctx.send(f"Message with id {arg[3:]} doesn't exist")
-                        return
-
-                case '-u' | '--user':
-                    user_id = int(arg[3:])
-                    if self.bot.get_user is None:
-                        await ctx.send(f"user with id {arg[3:]} doesn't exist")
-
-                case '--only-text':
-                    only_text = True
-
-                case '-l' | '--limit':
-                    limit = int(arg[3:])
-
-        # argument to_datetime is necessary for the command to work
-        if to_datetime is None:
-            await ctx.send("You have to specify -t <message-id>. Where message-id is ID of the message where purge ends")
-            logger.error("You have to specify -t <message-id>. Where message-id is ID of the message where purge ends")
+        try:
+            args = parser.parse_args(shlex.split(args))
+        except Exception as e:
+            logger.error(e)
             return
 
+        # When arg from is not None, validate if message with given id exits
+        if args._from is None:
+            from_datetime = ctx.message.created_at
+        else:
+            try:
+                from_datetime = (await ctx.fetch_message(args._from)).created_at
+            except discord.NotFound:
+                await ctx.send(f"Message with id {args._from} doesn't exist")
+                return
+
+        # Argument to_datetime is necessary for the command to work
+        try:
+            to_datetime = (await ctx.fetch_message(args.to)).created_at
+        except discord.NotFound:
+            await ctx.send(
+                "You have to specify -t <message-id>. Where <message-id> is ID of the message where purge ends")
+            logger.error(
+                "You have to specify -t <message-id>. Where <message-id> is ID of the message where purge ends")
+            return
+
+        # When arg user is not None, validate if user with given id exits
+        if args.user is not None:
+            if self.bot.get_user(args.user) is None:
+                await ctx.send(f"User with id {args.user} doesn't exist")
+                return
+
         await ctx.message.delete()
-        purged = await ctx.channel.purge(limit=limit, check=lambda msg: self.__filter_message(msg, from_datetime, to_datetime, user_id, only_text))
+
+        purged = await ctx.channel.purge(limit=args.limit,
+                                         check=lambda msg: self.__filter_message(msg, from_datetime, to_datetime,
+                                                                                 args.user, args.only_text))
 
         logger.info(f"purged {len(purged)} messages")
 
-
     @staticmethod
-    def __filter_message(msg: discord.Message, from_datetime: datetime = datetime.now(), to_datetime: datetime = None, user_id: int = None, only_text: bool = False) -> bool:
-        # If the message is younger than the purge begin message 
+    def __filter_message(msg: discord.Message, from_datetime: datetime = datetime.now(), to_datetime: datetime = None,
+                         user_id: int = None, only_text: bool = False) -> bool:
+        # If the message is younger than the purge begin message
         if msg.created_at >= from_datetime:
             return False
-        
+
         # If the message is older than the purge end message
         if to_datetime is not None and msg.created_at <= to_datetime:
             return False

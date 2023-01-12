@@ -1,5 +1,6 @@
 import discord
 from discord.ext import tasks, commands
+
 from src.selfbot.discum_bot import DiscumBot
 from src.selfbot.slash_command import SlashCommand
 from src.utils.config_val_io import AggregatedGuildValues, GuildSpecificValues, GlobalValues

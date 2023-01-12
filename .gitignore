@@ -149,6 +149,10 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
+# Visual Studio Code
+.vscode
+
+
 properties/config.yml
 properties/config.json
 logs/*

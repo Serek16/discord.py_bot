@@ -1,12 +1,13 @@
 import discord
-from src.model.member import Member
-from src.utils.logger import get_logger
 from discord.ext import commands
-from src.utils.bot_utils import has_role
-from src.selfbot.selfbot_utils import fetchMembersLevel
+
+from src.model.member import Member
 from src.selfbot.discum_bot import DiscumBot
+from src.selfbot.selfbot_utils import fetchMembersLevel
+from src.utils.bot_utils import has_role
 from src.utils.config_val_io import GlobalValues, GuildSpecificValues
 from src.utils.databaseIO import get_all_members, save_member
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__, __name__)
 
@@ -93,7 +94,8 @@ class SyncDatabase(commands.Cog):
             level = fetchMembersLevel(member, discum_bot)
             logger.debug(f"Fetched level: {level} from user: {member.name}")
 
-            if has_role(member, 'booster_id') is False and member.bot is False and level < no_newbie_level:
+            if has_role(member, GuildSpecificValues.get(guild.id, 'booster')) is False \
+                    and member.bot is False and level < no_newbie_level:
                 try:
                     await member.add_roles(discord.Object(newbie_role_id))
                 except discord.HTTPException as error:
