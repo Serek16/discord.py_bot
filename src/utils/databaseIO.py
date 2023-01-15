@@ -39,11 +39,9 @@ def get_all_members() -> list[Member]:
 
 def get_member_by_id(member_id: int) -> Member | None:
     conn, cur = __open_db_connection()
-    
-    db_params = GlobalValues.get('postgres')
-    conn = psycopg2.connect(**db_params)
-    cur = conn.cursor()
-    member = cur.execute("select * from member where member_id = %s", (member_id,))
+
+    cur.execute("select * from member where member_id = %s", (member_id,))
+    member = cur.fetchone()
 
     __commit_and_close_db_connection(conn, cur)
 
