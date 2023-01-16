@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import discord
 from discord.ext import commands
 
@@ -72,7 +74,7 @@ class SyncDatabase(commands.Cog):
                                 and member.bot is False:
                             await member.add_roles(discord.Object(newbie_role_id))
                 except discord.HTTPException as error:
-                    # Member probably left the server while database syncing was on
+                    # The member probably left the server while the database synchronization was in progress
                     logger.error(error)
                     continue
 
@@ -99,11 +101,15 @@ class SyncDatabase(commands.Cog):
                 try:
                     await member.add_roles(discord.Object(newbie_role_id))
                 except discord.HTTPException as error:
-                    # Member probably left the server while database syncing was on
+                    # The member probably left the server while the database synchronization was in progress
                     logger.error(error)
                     continue
 
-            save_member(Member(member.id, member.name, level))
+            joined_at = member.joined_at
+            if joined_at is None:
+                joined_at = datetime.now()
+
+            save_member(Member(member.id, member.name, level, first_join=joined_at, last_join=joined_at))
 
         logger.info("sync_database: Done")
         await ctx.send("sync_database: Done")
