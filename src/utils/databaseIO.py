@@ -40,8 +40,15 @@ def get_all_members() -> list[Member]:
 def get_member_by_id(member_id: int) -> Member | None:
     conn, cur = __open_db_connection()
 
-    cur.execute("select * from member where member_id = %s", (member_id,))
-    member = cur.fetchone()
+    cur.execute(
+        "select member_id, username, level, first_join, last_join, last_update, is_banned, member_left from member "
+        "where member_id = %s", (member_id,))
+    result = cur.fetchone()
+
+    if result is None:
+        return None
+
+    member = Member(result[0], result[1], result[2], result[3], result[4], result[5], result[6], result[7])
 
     __commit_and_close_db_connection(conn, cur)
 
