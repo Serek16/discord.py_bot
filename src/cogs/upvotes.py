@@ -45,7 +45,12 @@ class Upvotes(commands.Cog):
     @commands.Cog.listener("on_message")
     async def on_message(self, message: discord.Message):
         if targetChannels(message.channel.id, message.channel.guild.id):
-            if message.attachments or message.content.startswith('https://cdn.discordapp.com/attachments/'):
+
+            media_domains = ('https://cdn.discordapp.com/attachments/', 'https://media.discordapp.net/attachments/',
+                             'https://discord.com/channels/')
+
+            # If the message contains any atachment or it is a text with link to a media content
+            if message.attachments or any(substring in message.content for substring in media_domains):
                 await message.add_reaction("⬆")
                 await message.add_reaction("⬇")
 
