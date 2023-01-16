@@ -8,13 +8,14 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__, __name__)
 
 ALLOWED_DOMAINS = (
-    'https://discord.com/',
-    'https://cdn.discordapp.com/attachments/',
-    'https://tenor.com/view/',
-    'https://www.youtube.com/',
-    'https://www.reddit.com/',
-    'https://twitter.com/',
-    'https://open.spotify.com/'
+    'https://discord.com',
+    'https://media.discordapp.net',
+    'https://cdn.discordapp.com',
+    'https://tenor.com/view',
+    'https://www.youtube.com',
+    'https://www.reddit.com',
+    'https://twitter.com',
+    'https://open.spotify.com'
 )
 
 

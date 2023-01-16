@@ -20,8 +20,8 @@ class Purge(commands.Cog):
         """Check if given message is a text message.\n
             If it's a link leading to one of the allowed domains it's not considered a text message"""
 
-        allowed_domains = ("https://cdn.discordapp.com/attachments/", "https://discord.com/channels/",
-                           "https://tenor.com/view/")
+        allowed_domains = ('https://cdn.discordapp.com/attachments/', 'https://discord.com/channels/',
+                           'https://media.discordapp.net/attachments/', 'https://tenor.com/view/')
         if message.attachments:
             return False
         for domain in allowed_domains:
