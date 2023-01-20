@@ -12,10 +12,11 @@ ALLOWED_DOMAINS = (
     'https://media.discordapp.net',
     'https://cdn.discordapp.com',
     'https://tenor.com/view',
+    'https://imgur.com'
     'https://www.youtube.com',
     'https://www.reddit.com',
     'https://twitter.com',
-    'https://open.spotify.com'
+    'https://open.spotify.com',
 )
 
 
