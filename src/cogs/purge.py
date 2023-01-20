@@ -15,20 +15,6 @@ class Purge(commands.Cog):
     def __init__(self, bot):
         self.bot: discord.Client = bot
 
-    @staticmethod
-    def __is_text(message: discord.Message) -> bool:
-        """Check if given message is a text message.\n
-            If it's a link leading to one of the allowed domains it's not considered a text message"""
-
-        allowed_domains = ('https://cdn.discordapp.com/attachments/', 'https://discord.com/channels/',
-                           'https://media.discordapp.net/attachments/', 'https://tenor.com/view/')
-        if message.attachments:
-            return False
-        for domain in allowed_domains:
-            if domain in message.content:
-                return False
-        return True
-
     @commands.command()
     @commands.has_role('staff')
     async def purge(self, ctx: commands.Context, arg1, arg2=None, only_text=False):
@@ -57,7 +43,7 @@ class Purge(commands.Cog):
 
             # Break the loop if the last purged message is as old as we intended to. If not, keep purging, take next
             # 100 messages
-            if purged[-1].created_at <= to_datetime:
+            if purged[-1].created_at >= to_datetime:
                 break
 
         logger.info(f"purged {purged_total_len} messages")
@@ -149,6 +135,17 @@ class Purge(commands.Cog):
         if user_id is not None and msg.author.id != user_id:
             return False
 
+        return True
+
+    @staticmethod
+    def __is_text(message: discord.Message) -> bool:
+        allowed_domains = ('https://cdn.discordapp.com/attachments/', 'https://discord.com/channels/',
+                           'https://media.discordapp.net/attachments/', 'https://tenor.com/view/')
+        if message.attachments:
+            return False
+        for domain in allowed_domains:
+            if domain in message.content:
+                return False
         return True
 
 
