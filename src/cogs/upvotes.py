@@ -32,7 +32,7 @@ class Upvotes(commands.Cog):
         member = self.bot.get_user(member_id)
         channel = self.bot.get_channel(channel_id)
         author = (await channel.fetch_message(message_id)).author
-        if targetChannels(channel.id, channel.guild.id):
+        if self.__target_channels(channel.id, channel.guild.id):
             if not member.bot:
                 if author.id != member.id:
                     logger.debug(f"{member.name} {'added' if upvote_fun == add_upvote else 'removed'} "
@@ -44,12 +44,12 @@ class Upvotes(commands.Cog):
 
     @commands.Cog.listener("on_message")
     async def on_message(self, message: discord.Message):
-        if targetChannels(message.channel.id, message.channel.guild.id):
+        if self.__target_channels(message.channel.id, message.channel.guild.id):
 
             media_domains = ('https://cdn.discordapp.com/attachments/', 'https://media.discordapp.net/attachments/',
                              'https://discord.com/channels/')
 
-            # If the message contains any atachment or it is a text with link to a media content
+            # If the message contains any attachment, or it is a text with link to a media content
             if message.attachments or any(substring in message.content for substring in media_domains):
                 await message.add_reaction("⬆")
                 await message.add_reaction("⬇")
@@ -116,6 +116,7 @@ class Upvotes(commands.Cog):
                 if not self.__remove(ctx.guild.id, channel_id):
                     await ctx.send(f"No such channel in the list <#{channel_id}>")
 
+    # Subcommand "upvote_channels add <channel_id>"
     def __add(self, guild_id: int, channel_id: int):
         cur_channels: list = GuildSpecificValues.get(
             guild_id, 'upvote_channels')
@@ -125,6 +126,7 @@ class Upvotes(commands.Cog):
             return True
         return False
 
+    # Subcommand "upvote_channels remove <channel_id>"
     def __remove(self, guild_id: int, channel_id: int):
         cur_channels: list = GuildSpecificValues.get(
             guild_id, 'upvote_channels')
@@ -135,18 +137,19 @@ class Upvotes(commands.Cog):
         except ValueError:
             return False
 
+    # Subcommand "upvote_channels remove_all"
     def __remove_all(self, guild_id: int):
         GuildSpecificValues.set(guild_id, 'upvote_channels', [])
+
+    @staticmethod
+    def __target_channels(channel_id: int, guild_id: int) -> bool:
+        targeted_channels_id: list = GuildSpecificValues.get(
+            guild_id, 'upvote_channels')
+        for _id in targeted_channels_id:
+            if _id == channel_id:
+                return True
+        return False
 
 
 async def setup(bot):
     await bot.add_cog(Upvotes(bot))
-
-
-def targetChannels(channel_id: int, guild_id: int) -> bool:
-    targeted_channels_id: list = GuildSpecificValues.get(
-        guild_id, 'upvote_channels')
-    for _id in targeted_channels_id:
-        if _id == channel_id:
-            return True
-    return False
