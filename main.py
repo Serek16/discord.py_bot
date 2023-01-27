@@ -53,11 +53,11 @@ async def load_extensions():
     for filename in os.listdir("src/cogs"):
         if filename.endswith(".py"):
 
-            # Ignore this extensions if it is NOT in allowed list
+            # Ignore this extension if it is NOT in allowed list.
             if args.allow is not None and filename[:-3] not in args.allow:
                 continue
 
-            # Ignore this extensions if it IS in ignored list
+            # Ignore this extension if it IS in ignored list.
             if args.ignore is not None and filename[:-3] in args.ignore:
                 continue
 
@@ -73,7 +73,7 @@ async def on_ready():
 async def main():
     async with bot:
         await load_extensions()
-        bot.remove_command('help')  # Remove ";help" command
+        bot.remove_command('help')  # Remove ";help" command.
         await bot.start(GlobalValues.get("bot_token"))
 
 
