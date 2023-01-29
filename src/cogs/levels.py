@@ -26,7 +26,7 @@ class Levels(commands.Cog):
             return
 
         # It has to be specific message sent by Arcane "@username has reached level [level]. GG!".
-        result = self.__read_message(message)
+        result = await self.__read_message(message)
         if result is None:
             return
 
@@ -54,7 +54,7 @@ class Levels(commands.Cog):
         logger.info(
             f"Collected level {level} from user {username}#{member.discriminator} ({member_id}).")
 
-    def __read_message(self, message: discord.Message) -> tuple[str, int, int] | None:
+    async def __read_message(self, message: discord.Message) -> tuple[str, int, int] | None:
         """Extract username, member_id and level from Arcanes message.
         The message need to have "@username has reached level **[level]**. GG!" structure."""
 

@@ -1,4 +1,5 @@
 import discord
+from discord import Object
 from discord.ext import commands
 
 from src.utils.config_val_io import GuildSpecificValues
@@ -19,6 +20,15 @@ class Upvotes(commands.Cog):
 
     @commands.Cog.listener("on_raw_reaction_add")
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
+
+        message = await self.bot.get_guild(payload.guild_id).get_channel(payload.channel_id).fetch_message(
+            payload.message_id)
+
+        # User can't upvote his own messages.
+        if payload.user_id == message.author.id:
+            await message.remove_reaction(payload.emoji, Object(payload.user_id))
+            return
+
         await self.__reaction_event(payload.emoji, payload.channel_id, payload.message_id, payload.user_id,
                                     add_upvote, add_downvote)
 

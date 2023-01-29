@@ -51,7 +51,7 @@ class NewMember(commands.Cog):
         if newbie is True and member.bot is False:
             await member.add_roles(Object(GuildSpecificValues.get(guild.id, 'newbie')))
 
-        NewMember.__apply_member_level_role(member, db_member.level)
+        await NewMember.__apply_member_level_role(member, db_member.level)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
@@ -77,7 +77,7 @@ class NewMember(commands.Cog):
             save_member(db_member)
 
     @staticmethod
-    def __apply_member_level_role(member: discord.Member, level: int) -> None:
+    async def __apply_member_level_role(member: discord.Member, level: int) -> None:
         """Give a member a level role depending on the level they have."""
 
         if level >= 100:
