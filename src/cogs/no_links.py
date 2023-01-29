@@ -22,8 +22,8 @@ ALLOWED_DOMAINS = (
 
 class NoLinks(commands.Cog):
 
-    def __init__(self, bot):
-        self.bot: discord.Client = bot
+    def __init__(self, bot: discord.Client):
+        self.bot = bot
 
     @commands.Cog.listener("on_message")
     async def on_message(self, message: discord.Message):

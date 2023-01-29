@@ -14,7 +14,7 @@ logger = get_logger(__name__, __name__)
 
 class NewMember(commands.Cog):
 
-    def __init__(self, bot):
+    def __init__(self, bot: discord.Client):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -51,7 +51,7 @@ class NewMember(commands.Cog):
         if newbie is True and member.bot is False:
             await member.add_roles(Object(GuildSpecificValues.get(guild.id, 'newbie')))
 
-        self.__apply_member_level_role(member, db_member.level)
+        NewMember.__apply_member_level_role(member, db_member.level)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
@@ -110,7 +110,9 @@ class NewMember(commands.Cog):
             return
 
         role_id = GuildSpecificValues.get(member.guild.id, role)
-        await member.add_roles(Object(role_id))
+        role = member.guild.get_role(role_id)
+        await member.add_roles(role)
+        logger.info(f"{member.name}#{member.discriminator} was given {role.name} role.")
 
 
 async def setup(bot):

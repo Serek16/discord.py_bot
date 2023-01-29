@@ -5,7 +5,7 @@ from discord.ext import commands
 
 class Responses(commands.Cog):
 
-    def __init__(self, bot):
+    def __init__(self, bot: discord.Client):
         self.bot = bot
 
     @commands.Cog.listener("on_message")

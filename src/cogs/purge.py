@@ -12,8 +12,8 @@ logger = get_logger(__name__, __name__)
 
 class Purge(commands.Cog):
 
-    def __init__(self, bot):
-        self.bot: discord.Client = bot
+    def __init__(self, bot: discord.Client):
+        self.bot = bot
 
     @commands.command()
     @commands.has_role('staff')

@@ -16,7 +16,7 @@ logger = get_logger(__name__, __name__)
 
 class SyncDatabase(commands.Cog):
 
-    def __init__(self, bot):
+    def __init__(self, bot: discord.Client):
         self.bot = bot
 
     @commands.command()
