@@ -2,6 +2,7 @@ import discord
 from discord import Object
 from discord.ext import commands
 
+from src.utils.bot_utils import extract_channel_id
 from src.utils.config_val_io import GuildSpecificValues
 from src.utils.databaseIO import add_upvote, add_downvote, remove_upvote, remove_downvote, get_reaction_list
 from src.utils.logger import get_logger
@@ -102,12 +103,8 @@ class Upvotes(commands.Cog):
             self.__remove_all(ctx.guild.id)
             return
 
-        channel_id = channel
-        if channel_id.startswith("<#"):
-            channel_id = channel_id[2:-1]
-
         try:
-            channel_id = int(channel_id)
+            channel_id = extract_channel_id(channel)
         except ValueError:
             logger.error(f"{channel} is not a valid channel id")
             await ctx.send("You have to provide valid channel id")

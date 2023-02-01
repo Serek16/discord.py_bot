@@ -3,6 +3,7 @@ from discord.ext import tasks, commands
 
 from src.selfbot.discum_bot import DiscumBot
 from src.selfbot.slash_command import SlashCommand
+from src.utils.bot_utils import extract_channel_id
 from src.utils.config_val_io import AggregatedGuildValues, GuildSpecificValues, GlobalValues
 from src.utils.logger import get_logger
 
@@ -26,12 +27,8 @@ class Bumping(commands.Cog):
     @commands.has_role('Administrator')
     async def bump_channel(self, ctx: commands.Context, channel: str):
 
-        channel_id = channel
-        if channel_id.startswith("<#"):
-            channel_id = channel_id[2:-1]
-
         try:
-            channel_id = int(channel_id)
+            channel_id = extract_channel_id(channel)
         except ValueError:
             logger.error(f"{channel} is not a valid channel id")
             await ctx.send("You have to provide valid channel id")
