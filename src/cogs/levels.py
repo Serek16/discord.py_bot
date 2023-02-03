@@ -32,7 +32,7 @@ class Levels(commands.Cog):
 
         username, member_id, level = result
 
-        logger.debug(f"member {username} ({member_id}) level: {level}.")
+        logger.debug(f"member {username} @{member_id} level: {level}.")
 
         guild = message.guild
         member = guild.get_member(member_id)
@@ -52,7 +52,7 @@ class Levels(commands.Cog):
                 save_member(db_member)
 
         logger.info(
-            f"Collected level {level} from user {username}#{member.discriminator} ({member_id}).")
+            f"Collected level {level} from user {username}#{member.discriminator} @{member_id}.")
 
     async def __read_message(self, message: discord.Message) -> tuple[str, int, int] | None:
         """Extract username, member_id and level from Arcanes message.

@@ -25,7 +25,7 @@ class NewMember(commands.Cog):
         if member.guild.id != AggregatedGuildValues.get('guild_id')[0][1]:
             return
 
-        logger.info(f"Member {member.name}#{member.discriminator} ({member.id}) joined the server.")
+        logger.info(f"Member {member.name}#{member.discriminator} @{member.id} joined the server.")
 
         newbie = True
 
@@ -49,7 +49,6 @@ class NewMember(commands.Cog):
             if db_member.level >= GlobalValues.get('newbie_level'):
                 newbie = False
 
-
         guild = member.guild
         if newbie is True and member.bot is False:
             await member.add_roles(Object(GuildSpecificValues.get(guild.id, 'newbie')))
@@ -62,7 +61,7 @@ class NewMember(commands.Cog):
         if member.guild.id != AggregatedGuildValues.get('guild_id')[0][1]:
             return
 
-        logger.info(f"Member {member.name}#{member.discriminator} ({member.id}) left the server.")
+        logger.info(f"Member {member.name}#{member.discriminator} @{member.id} left the server.")
 
         db_member = get_member_by_id(member.id)
 

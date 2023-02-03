@@ -40,9 +40,8 @@ class SyncDatabase(commands.Cog):
         db_member_count = len(db_member_list)
 
         for i, db_member in enumerate(db_member_list):
-
             logger.info(
-                f"Checking: {db_member.username} ({db_member.member_id}) [{i}/{db_member_count}]")
+                f"Checking: {db_member.username} @{db_member.member_id} [{i}/{db_member_count}]")
 
             # Check if the member is still on the server
             member = None
@@ -91,7 +90,7 @@ class SyncDatabase(commands.Cog):
         # Search through members that are on the server but are not in the database
         for i, member in enumerate(guild_members):
             logger.info(
-                f"Member {member.name} ({member.id}) not in the database [{i}/{len(guild_members)}]")
+                f"Member {member.name} @{member.id} not in the database [{i}/{len(guild_members)}]")
 
             level = fetchMembersLevel(member, discum_bot)
             logger.debug(f"Fetched level: {level} from user: {member.name}")

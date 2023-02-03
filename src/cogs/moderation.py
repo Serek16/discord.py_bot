@@ -27,8 +27,8 @@ class Moderation(commands.Cog):
             return
 
         logger.info(
-            f"{member.name} ({member.id}) has been banned in {member.guild.name} ({member.guild.id})."
-            f" Reason: {reason}")
+            f"{member.name}#{member.discriminator} @{member.id} has been banned in "
+            f"{member.guild.name} @{member.guild.id}. Reason: {reason}.")
 
         user = self.bot.get_user(member.id)
         await self.ban_user(user, reason, member.guild)
@@ -127,7 +127,7 @@ class Moderation(commands.Cog):
                         user,
                         reason=f"reason: {reason}\nunbanned on {guild_of_origin.name} @{guild_of_origin.id}")
 
-                logger.debug(f"User {user.name}#{user.discriminator} unbanned on {guild.name} ({guild.id})")
+                logger.debug(f"User {user.name}#{user.discriminator} unbanned on {guild.name} @{guild.id}.")
 
             except discord.HTTPException as err:
                 logger.error(err)
