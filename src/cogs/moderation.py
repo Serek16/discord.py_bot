@@ -104,7 +104,7 @@ class Moderation(commands.Cog):
                     # Add a note informing on which server a member was originally banned
                     await guild.ban(
                         user,
-                        reason=f"reason: {reason}\nbanned on {guild_of_origin.name} @{guild_of_origin.id}",
+                        reason=f"Reason: {reason}\n. Banned on: {guild_of_origin.name} @{guild_of_origin.id}",
                         delete_message_days=7)
 
                 logger.debug(f"User {user.name}#{user.discriminator} banned on {guild.name} @{guild.id}")
@@ -125,7 +125,7 @@ class Moderation(commands.Cog):
                     # Add a note informing on which server a member was originally unbanned
                     await guild.unban(
                         user,
-                        reason=f"reason: {reason}\nunbanned on {guild_of_origin.name} @{guild_of_origin.id}")
+                        reason=f"Reason: {reason}\n. Unbanned on {guild_of_origin.name} @{guild_of_origin.id}")
 
                 logger.debug(f"User {user.name}#{user.discriminator} unbanned on {guild.name} @{guild.id}.")
 
