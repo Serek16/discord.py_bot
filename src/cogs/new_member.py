@@ -43,15 +43,16 @@ class NewMember(commands.Cog):
             db_member.last_join = datetime.datetime.now()
             save_member(db_member)
 
+            await NewMember.__apply_member_level_role(member, db_member.level)
+
             # If level is greater than or equals minimal required level to not be a newbie anymore
             if db_member.level >= GlobalValues.get('newbie_level'):
                 newbie = False
 
+
         guild = member.guild
         if newbie is True and member.bot is False:
             await member.add_roles(Object(GuildSpecificValues.get(guild.id, 'newbie')))
-
-        await NewMember.__apply_member_level_role(member, db_member.level)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
