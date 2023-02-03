@@ -21,3 +21,16 @@ def extract_channel_id(channel: str) -> int:
         return int(channel)
     except ValueError:
         raise ValueError(f"Couldn't extract channel id from \"{channel}\"")
+
+
+def extract_user_id(user: str) -> int:
+    """Extract user id from user tag. It can have format e.g. "<@972860635933179915>" or "972860635933179915".
+    Otherwise, ValueError exception is raised."""
+
+    if user.startswith("<@"):
+        return int(user[2:-1])
+
+    try:
+        return int(user)
+    except ValueError:
+        raise ValueError(f"Couldn't extract channel id from \"{user}\"")
