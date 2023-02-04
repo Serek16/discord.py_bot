@@ -14,6 +14,7 @@ ALLOWED_DOMAINS = (
     'https://tenor.com/view',
     'https://imgur.com'
     'https://www.youtube.com',
+    'https://www.youtu.be.com',
     'https://www.reddit.com',
     'https://twitter.com',
     'https://open.spotify.com',
@@ -30,18 +31,27 @@ class NoLinks(commands.Cog):
         author = message.author
 
         if 'http://' in message.content:
-            await message.delete()
-            logger.info(
-                f"Removed \"{message.content}\" message from {author.name}#{author.discriminator} due "
-                f"to containing a not secured link.")
+            try:
+                await message.delete()
+                logger.info(
+                    f"Removed \"{message.content}\" message from {author.name}#{author.discriminator} due "
+                    f"to containing a not secured link.")
+            except discord.NotFound:
+                # The message was probably removed by some other bot.
+                return
 
         if 'https://' in message.content:
             if has_role(message.guild.get_member(author.id), GuildSpecificValues.get(message.guild.id, 'newbie')):
                 if not any(ext in message.content for ext in ALLOWED_DOMAINS):
-                    await message.delete()
-                    logger.info(
-                        f"Removed \"{message.content}\" message from {message.author.name}#{message.author.discriminator}"
-                        f" due to containing a link from outside of allowed domain list posted by low rank user.")
+                    try:
+                        await message.delete()
+                        logger.info(
+                            f"Removed \"{message.content}\" message from "
+                            f"{message.author.name}#{message.author.discriminator}"
+                            f" due to containing a link from outside of allowed domain list posted by low rank user.")
+                    except discord.NotFound:
+                        # The message was probably removed by some other bot.
+                        return
 
 
 async def setup(bot):
