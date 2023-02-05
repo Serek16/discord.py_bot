@@ -34,19 +34,19 @@ console = Console(bot)
 
 
 @console.command()
-async def load(extension_name: str):
+async def load(extension_name):
     await bot.load_extension(f".{extension_name}", package='src.cogs')
     print(f'Module \"{extension_name}\" has been loaded.')
 
 
 @console.command()
-async def unload(extension_name: str):
+async def unload(extension_name):
     await bot.unload_extension(f".{extension_name}", package='src.cogs')
     print(f'Module \"{extension_name}\" has been unloaded.')
 
 
 @console.command()
-async def reload(extension_name: str):
+async def reload(extension_name):
     await bot.reload_extension(f".{extension_name}", package='stc.cogs')
     print(f'Module \"{extension_name}\" has been reloaded.')
 
