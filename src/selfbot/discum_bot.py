@@ -18,7 +18,7 @@ class DiscumBot:
     def __run_client_in_thread(self):
         self.client.gateway.run()
 
-    def sendSlashCommand(self, slash_command: SlashCommand):
+    def send_slash_command(self, slash_command: SlashCommand):
         guild_id = slash_command.guild_id
         channel_id = slash_command.channel_id
         bot_id = slash_command.bot_id

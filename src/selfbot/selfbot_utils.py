@@ -14,7 +14,7 @@ from src.utils.config_val_io import GlobalValues, GuildSpecificValues
 logger = get_logger(__name__, __name__)
 
 
-def fetchMembersLevel(member: discord.Member, discum_bot: DiscumBot) -> int:
+def fetch_members_level(member: discord.Member, discum_bot: DiscumBot) -> int:
     guild_id = member.guild.id
     channel_id = GuildSpecificValues.get(guild_id, 'set_level_channel_id')
     arcane_id = GlobalValues.get('arcane_id')
@@ -23,7 +23,7 @@ def fetchMembersLevel(member: discord.Member, discum_bot: DiscumBot) -> int:
 
     discum_bot.client.sendMessage(str(channel_id), "------")
     while True:
-        discum_bot.sendSlashCommand(SlashCommand(guild_id, channel_id, arcane_id, command_name, command_args))
+        discum_bot.send_slash_command(SlashCommand(guild_id, channel_id, arcane_id, command_name, command_args))
 
         sleep(1)
 
@@ -43,11 +43,11 @@ def fetchMembersLevel(member: discord.Member, discum_bot: DiscumBot) -> int:
                 img_url = obj_content['attachments'][0]['url']
                 response = requests.get(img_url)
                 img = Image.open(BytesIO(response.content))
-                cropped_img = cropImage(img)
-                return retrieveLevelFromImage(cropped_img)
+                cropped_img = crop_level_info_image(img)
+                return retrieve_level_from_image(cropped_img)
 
 
-def cropImage(img):
+def crop_level_info_image(img: Image) -> Image:
     left = 140
     top = 90
     right = 250
@@ -56,7 +56,7 @@ def cropImage(img):
     return img.crop((left, top, width - right, height - bottom))
 
 
-def retrieveLevelFromImage(img) -> int:
+def retrieve_level_from_image(img: Image) -> int:
     img_msg = pytesseract.image_to_string(img)
     logger.debug(img_msg)
     level: str = \

@@ -20,13 +20,12 @@ class Bumping(commands.Cog):
     @tasks.loop(minutes=15.0)
     async def bump(self):
         for guild_id, bump_channel_id in AggregatedGuildValues.get('bump_channel'):
-            self.selfbot.sendSlashCommand(
+            self.selfbot.send_slash_command(
                 SlashCommand(guild_id, bump_channel_id, GlobalValues.get('disboard_id'), 'bump'))
 
     @commands.command()
     @commands.has_role('Administrator')
     async def bump_channel(self, ctx: commands.Context, channel: str):
-
         try:
             channel_id = extract_channel_id(channel)
         except ValueError:

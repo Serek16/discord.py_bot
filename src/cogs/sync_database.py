@@ -5,7 +5,7 @@ from discord.ext import commands
 
 from src.model.member import Member
 from src.selfbot.discum_bot import DiscumBot
-from src.selfbot.selfbot_utils import fetchMembersLevel
+from src.selfbot.selfbot_utils import fetch_members_level
 from src.utils.bot_utils import has_role
 from src.utils.config_val_io import GlobalValues, GuildSpecificValues
 from src.utils.databaseIO import get_all_members, save_member
@@ -56,7 +56,7 @@ class SyncDatabase(commands.Cog):
                 db_member.member_left = False
 
                 if sync_levels:
-                    db_member.level = fetchMembersLevel(member, discum_bot)
+                    db_member.level = fetch_members_level(member, discum_bot)
                     logger.debug(
                         f"Fetched level: {db_member.level} from user {db_member.username}")
                 save_member(db_member)
@@ -92,7 +92,7 @@ class SyncDatabase(commands.Cog):
             logger.info(
                 f"Member {member.name} @{member.id} not in the database [{i}/{len(guild_members)}]")
 
-            level = fetchMembersLevel(member, discum_bot)
+            level = fetch_members_level(member, discum_bot)
             logger.debug(f"Fetched level: {level} from user: {member.name}")
 
             if has_role(member, GuildSpecificValues.get(guild.id, 'booster')) is False \
