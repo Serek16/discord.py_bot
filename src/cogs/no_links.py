@@ -14,7 +14,7 @@ ALLOWED_DOMAINS = (
     'https://tenor.com/view',
     'https://imgur.com'
     'https://www.youtube.com',
-    "https://youtu.be"
+    'https://youtu.be',
     'https://www.reddit.com',
     'https://twitter.com',
     'https://open.spotify.com',
