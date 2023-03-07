@@ -1,11 +1,13 @@
-from discum.utils.slash import SlashCommander
-import discum
-
 from threading import Thread
+
+import discum
+from discum.utils.slash import SlashCommander
+
 from src.selfbot.slash_command import SlashCommand
+from src.utils.singleton import SingletonMeta
 
 
-class DiscumBot:
+class DiscumBot(metaclass=SingletonMeta):
     def __init__(self, token: str, log=False):
         self.client = discum.Client(token=token, log=log)
         self.__thread = Thread(target=self.__run_client_in_thread)

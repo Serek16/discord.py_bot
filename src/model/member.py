@@ -42,6 +42,10 @@ class Member:
     def first_join(self):
         return self._first_join
 
+    @first_join.setter
+    def first_join(self, first_join):
+        self._first_join = first_join
+
     @property
     def last_join(self):
         return self._last_join

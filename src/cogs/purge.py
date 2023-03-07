@@ -78,8 +78,12 @@ class Purge(commands.Cog):
 
         try:
             args = parser.parse_args(shlex.split(args))
-        except Exception as e:
+        except argparse.ArgumentError as e:
             logger.error(e)
+            return
+        except SystemExit:
+            # When --help is used
+            await ctx.send(parser.format_help())
             return
 
         # When arg from is not None, validate if message with given id exits
