@@ -2,8 +2,8 @@ import discord
 import psycopg2
 
 from src.model.member import Member
-from src.utils.logger import get_logger
 from src.utils.config_val_io import GlobalValues
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__, __name__)
 
@@ -14,7 +14,7 @@ def get_all_members() -> list[Member]:
     conn, cur = __open_db_connection()
 
     cur.execute(
-        "select member_id, username, level, first_join, last_join, last_update, is_banned, member_left from member")
+        "SELECT member_id, username, level, first_join, last_join, last_update, is_banned, member_left FROM member")
 
     row = cur.fetchone()
     while row is not None:
@@ -41,8 +41,8 @@ def get_member_by_id(member_id: int) -> Member | None:
     conn, cur = __open_db_connection()
 
     cur.execute(
-        "select member_id, username, level, first_join, last_join, last_update, is_banned, member_left from member "
-        "where member_id = %s", (member_id,))
+        "SELECT member_id, username, level, first_join, last_join, last_update, is_banned, member_left FROM member "
+        "WHERE member_id = %s", (member_id,))
     result = cur.fetchone()
 
     if result is None:
@@ -72,17 +72,17 @@ def save_member(member: Member):
 
     if user is None:
         cur.execute(
-            "insert into member"
+            "INSERT INTO MEMBER"
             " (member_id, username, level, first_join, last_join, last_update, is_banned, member_left)"
-            " values(%s, %s, %s, %s, %s, %s, %s, %s)",
+            " VALUES(%s, %s, %s, %s, %s, %s, %s, %s)",
             (member_id, username, level, first_join, last_join, last_update, is_banned, member_left))
 
     else:
         cur.execute(
-            "update member set"
-            " level = %s, last_join = %s, last_update = %s, is_banned = %s, member_left = %s"
-            " where member_id = %s",
-            (level, last_join, last_update, is_banned, member_left, member_id))
+            "UPDATE member SET"
+            " level = %s, first_join = %s, last_join = %s, last_update = %s, is_banned = %s, member_left = %s"
+            " WHERE member_id = %s",
+            (level, first_join, last_join, last_update, is_banned, member_left, member_id))
 
     __commit_and_close_db_connection(conn, cur)
 
