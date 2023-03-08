@@ -69,7 +69,7 @@ class SyncDatabase(commands.Cog):
 
             # If member is still on the server
             if member is not None:
-                logger.info(f" {member.name} is still on the server")
+                logger.info(f"{member.name} is still on the server")
                 db_member.member_left = False
 
                 if args.sync_levels:
@@ -99,7 +99,7 @@ class SyncDatabase(commands.Cog):
             # If member is no loner on the server
             else:
                 logger.info(
-                    f" {db_member.username} is no longer on the server")
+                    f"{db_member.username} is no longer on the server")
                 db_member.member_left = True
 
             # If the member has rejoined the field joined_at from Discord.Member is reseted.
