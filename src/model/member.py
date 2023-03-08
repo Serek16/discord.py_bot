@@ -6,12 +6,20 @@ class Member:
                  member_id: int,
                  username: str,
                  level: int = 0,
-                 first_join: datetime = datetime.now(),
-                 last_join: datetime = datetime.now(),
-                 last_update: datetime = datetime.now(),
+                 first_join: datetime = None,
+                 last_join: datetime = None,
+                 last_update: datetime = None,
                  is_banned: bool = False,
                  member_left: bool = False
                  ):
+
+        if first_join is None:
+            first_join = datetime.now()
+        if last_join is None:
+            last_join = datetime.now()
+        if last_update is None:
+            last_update = datetime.now()
+
         self._member_id = member_id
         self._username = username
         self._level = level
