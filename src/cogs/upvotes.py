@@ -78,75 +78,82 @@ class Upvotes(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.has_role('Administrator')
-    @commands.command()
-    async def upvote_channels(self, ctx: commands.Context, command: str = None, channel: str = None):
+    @commands.command(name="upvote-channels")
+    async def upvote_channels(self, ctx: commands.Context, *args):
 
-        logger.info(
-            f"command upvote_channels command: {command} channel: {channel} used"
-            f" in {ctx.channel.name} by {ctx.author.name}")
-
-        if command is None:
-            channels = ''
-            for channel_id in GuildSpecificValues.get(ctx.guild.id, 'upvote_channels'):
-                channels += f'<#{channel_id}> '
-            logger.debug(f"upvote channels: {channels}")
-            await ctx.send(f"upvote channels: {channels}")
+        if not args:
+            channel_list = ""
+            for channel_id in GuildSpecificValues.get(ctx.guild.id, "upvote_channels"):
+                channel_list += f'<#{channel_id}> '
+            await ctx.send(f"Upvote channels: {channel_list}")
             return
 
-        _commands = ['add', 'remove', 'remove-all']
-        if command not in _commands:
-            logger.error(f"There is no such command \"{command}\"")
-            await ctx.send(f"There is no such command \"{command}\". Available commands {_commands}")
-            return
+        match args[0]:
+            case 'add':
+                await self.__add(ctx, args[1:])
+            case 'remove':
+                await self.__remove(ctx, args[1:])
+            case 'remove-all':
+                await self.__remove_all(ctx)
+            case _:
+                await ctx.send(
+                    f"There is no such command \"{args[0]}\". Available commands ['add', 'remove', 'remove-all']")
+                return
 
-        if command == 'remove-all':
-            self.__remove_all(ctx.guild.id)
+    @staticmethod
+    async def __add(ctx: commands.Context, args: tuple):
+        """Subcommand "upvote_channels add [channel_id]"""
+
+        if not args or len(args) != 1:
+            await ctx.send("You have to provide existing channel")
             return
 
         try:
-            channel_id = extract_channel_id(channel)
+            channel_id = extract_channel_id(args[0])
+            if ctx.guild.get_channel(channel_id) is None:
+                await ctx.send(f"Channel with id {channel_id} doesn't exist")
         except ValueError:
-            logger.error(f"{channel} is not a valid channel id")
-            await ctx.send("You have to provide valid channel id")
+            await ctx.send("You have to provide existing channel")
             return
 
-        if self.bot.get_channel(channel_id) is None:
-            logger.error(f"{channel} does not exist")
-            await ctx.send(f"{channel} does not exist")
-            return
-
-        match command:
-            case 'add':
-                if not self.__add(ctx.guild.id, channel_id):
-                    await ctx.send(f"Channel <#{channel_id}> already exist in the list")
-            case 'remove':
-                if not self.__remove(ctx.guild.id, channel_id):
-                    await ctx.send(f"No such channel in the list <#{channel_id}>")
-
-    # Subcommand "upvote_channels add <channel_id>"
-    def __add(self, guild_id: int, channel_id: int):
-        cur_channels: list = GuildSpecificValues.get(
-            guild_id, 'upvote_channels')
+        cur_channels: list = GuildSpecificValues.get(ctx.guild.id, 'upvote_channels')
         if channel_id not in cur_channels:
             cur_channels.append(channel_id)
-            GuildSpecificValues.set(guild_id, 'upvote_channels', cur_channels)
-            return True
-        return False
+            GuildSpecificValues.set(ctx.guild.id, 'upvote_channels', cur_channels)
+            await ctx.send(f"<#{channel_id}> channel has been added to the list")
+        else:
+            await ctx.send(f"<#{channel_id}> already exists in the list")
 
-    # Subcommand "upvote_channels remove <channel_id>"
-    def __remove(self, guild_id: int, channel_id: int):
-        cur_channels: list = GuildSpecificValues.get(
-            guild_id, 'upvote_channels')
+    @staticmethod
+    async def __remove(ctx: commands.Context, args: tuple):
+        """Subcommand "upvote_channels remove [channel_id]"""
+
+        if not args or len(args) != 1:
+            await ctx.send("You have to provide existing channel")
+            return
+
+        try:
+            channel_id = extract_channel_id(args[0])
+            if ctx.guild.get_channel(channel_id) is None:
+                await ctx.send(f"Channel with id {channel_id} doesn't exist")
+        except ValueError:
+            await ctx.send("You have to provide existing channel")
+            return
+
+        cur_channels: list = GuildSpecificValues.get(ctx.guild.id, 'upvote_channels')
         try:
             cur_channels.remove(channel_id)
-            GuildSpecificValues.set(guild_id, 'upvote_channels', cur_channels)
-            return True
+            GuildSpecificValues.set(ctx.guild.id, 'upvote_channels', cur_channels)
+            await ctx.send(f"<#{channel_id}> channel has been removed from the list")
         except ValueError:
-            return False
+            await ctx.send(f"<#{channel_id}> doesn't exist in the list")
 
-    # Subcommand "upvote_channels remove_all"
-    def __remove_all(self, guild_id: int):
-        GuildSpecificValues.set(guild_id, 'upvote_channels', [])
+    @staticmethod
+    async def __remove_all(ctx: commands.Context):
+        """Subcommand "upvote_channels remove-all"""
+
+        GuildSpecificValues.set(ctx.guild.id, 'upvote_channels', [])
+        await ctx.send("All channels have been removed from the list")
 
     @staticmethod
     def __target_channels(channel_id: int, guild_id: int) -> bool:
