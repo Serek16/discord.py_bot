@@ -18,9 +18,9 @@ class Purge(commands.Cog):
     @commands.command()
     @commands.has_role('staff')
     async def purge(self, ctx: commands.Context, arg1, arg2=None, only_text=False):
-        """Remove messages from the channel on which the command was used
-            if arg2 is None, then delete all messages to message with arg1 id.
-            Otherwise, delete all messages from message with id arg1 to message with id arg2"""
+        """Remove messages from the channel on which the command is used.
+            If arg2 is None, then bot deletes all messages to the message with id arg1.
+            Otherwise, delete all messages starting from the message with id arg1 to the message with id arg2"""
 
         if only_text is False:
             logger.info(f"{ctx.author} used purge in {ctx.channel.name}")
