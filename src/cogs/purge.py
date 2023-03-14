@@ -43,7 +43,7 @@ class Purge(commands.Cog):
 
             # Break the loop if the last purged message is as old as we intended to. If not, keep purging, take next
             # 100 messages
-            if purged[-1].created_at >= to_datetime:
+            if purged[-1].created_at <= to_datetime:
                 break
 
         logger.info(f"purged {purged_total_len} messages")
