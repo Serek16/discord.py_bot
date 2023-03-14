@@ -30,10 +30,18 @@ class Selfbot(metaclass=SingletonMeta):
         async def on_message(self, msg: selfcord.Message):
             if msg.content.startswith(';'):
                 if msg.content[1:] == "sync_database":
-                    await sync_database(self, msg)
+                    already_examined_users = get_examined_users()
+                    try:
+                        await sync_database(self, msg, already_examined_users)
+                    except Exception as e:
+                        logger.error(e)
+
+                if msg.content[1:] == "debug":
+                    x = await self.get_first_message_in_guild(msg.guild.id, 803319329378009088, logger)
+                    print("debug")
 
 
-async def sync_database(client: selfcord.Client, msg: selfcord.Message):
+async def sync_database(client: selfcord.Client, msg: selfcord.Message, examined_users: list):
     """synchronize the presence of members on the server and in the database"""
 
     await msg.channel.send("sync_database: Starting")
@@ -47,19 +55,23 @@ async def sync_database(client: selfcord.Client, msg: selfcord.Message):
     db_member_count = len(db_member_list)
 
     for i, db_member in enumerate(db_member_list):
+        if db_member.member_id in examined_users:
+            print(f"skipping {db_member.member_id}")
+            continue
+
         logger.info(f"Checking: {db_member.username} @{db_member.member_id} [{i}/{db_member_count}]")
 
         member = guild.get_member(db_member.member_id)
 
         # If the member is still on this server, and he's still on the main server
         if main_guild.get_member(db_member.member_id) is not None and member is not None:
-            logger.info(f" {member.name} is still on the server")
+            logger.debug(f"{member.name} is still on the server")
             db_member.member_left = False
             db_member.first_join = min(member.joined_at, db_member.first_join)
 
         # If member is no longer on any of the servers
         else:
-            logger.info(f" {db_member.username} is no longer on the server")
+            logger.debug(f"{db_member.username} is no longer on the server")
             db_member.member_left = True
 
         # If the member has rejoined the field joined_at from Discord.Member is reseted.
@@ -68,7 +80,10 @@ async def sync_database(client: selfcord.Client, msg: selfcord.Message):
             first_message_date = await get_first_message_date(db_member.member_id, guild.id)
             db_member.first_join = min(first_message_date, db_member.first_join)
         except KeyError as e:
-            logger.error(e)
+            logger.debug(e)
+        except selfcord.HTTPException:
+            logger.error(f"There was a problem with http result for user: {db_member.member_id}")
+            continue
 
         save_member(db_member)
 
@@ -79,6 +94,8 @@ async def sync_database(client: selfcord.Client, msg: selfcord.Message):
                 guild_members.remove(m)
                 break
 
+        save_examined_user(db_member.member_id)
+        logger.info(f"User first joined at: {db_member.first_join}")
         await asyncio.sleep(0.5)
 
     logger.info(
@@ -107,16 +124,43 @@ async def sync_database(client: selfcord.Client, msg: selfcord.Message):
 
         save_member(Member(member.id, member.name, 0,
                            first_join=first_join, last_join=joined_at, member_left=member_left))
-        await asyncio.sleep(0.5)
+        save_examined_user(member.id)
+        logger.info(f"User first joined at: {first_join}")
 
     logger.info("sync_database: Done")
     await msg.channel.send("sync_database: Done")
 
 
+def get_examined_users():
+    examined_users = []
+    with open('examined_users.txt', 'r') as fd:
+        for line in fd:
+            try:
+                examined_users.append(int(line))
+            except:
+                continue
+    return examined_users
+
+
+def save_examined_user(user_id: int):
+    with open('examined_users.txt', 'a') as fd:
+        fd.write(f"\n{user_id}")
+
+
 async def get_first_message_date(user_id: int, guild_id: int) -> datetime:
     selfbot = Selfbot(GlobalValues.get('selfbot_token'))
-    message = await selfbot.client.get_first_message_in_guild(guild_id, user_id)
+
+    while selfbot.client.is_ws_ratelimited():
+        pass
+
+    try:
+        message = await selfbot.client.get_first_message_in_guild(guild_id, user_id, logger)
+    except selfcord.HTTPException as e:
+        raise e
+
     if message is None:
         raise KeyError("No message was found")
+
     logger.info(f"Date of user's first message: {message.created_at}")
+
     return message.created_at

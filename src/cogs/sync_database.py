@@ -21,6 +21,7 @@ class SyncDatabase(commands.Cog):
 
     def __init__(self, bot: discord.Client):
         self.bot = bot
+        Selfbot(GlobalValues.get('selfbot_token'))
 
     @commands.command()
     @commands.has_role('Administrator')
