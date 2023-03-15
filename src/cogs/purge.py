@@ -124,11 +124,11 @@ class Purge(commands.Cog):
     def __filter_message(msg: discord.Message, from_datetime: datetime = datetime.now(), to_datetime: datetime = None,
                          user_id: int = None, only_text: bool = False) -> bool:
         # If the message is younger than the purge begin message
-        if msg.created_at >= from_datetime:
+        if msg.created_at > from_datetime:
             return False
 
         # If the message is older than the purge end message
-        if to_datetime is not None and msg.created_at <= to_datetime:
+        if to_datetime is not None and msg.created_at < to_datetime:
             return False
 
         # If the message isn't a text
