@@ -82,7 +82,7 @@ async def load_extensions():
 
 @bot.event
 async def on_ready():
-    print(f'\'{bot.user.name}\' is ready!')
+    print(f"\'{bot.user.name}\" @{bot.user.id} is ready!")
 
 
 async def main():

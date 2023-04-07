@@ -21,33 +21,34 @@ class Upvotes(commands.Cog):
 
     @commands.Cog.listener("on_raw_reaction_add")
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
+        if self.__target_channels(payload.channel_id, payload.guild_id):
+            message = await self.bot.get_guild(payload.guild_id).get_channel(payload.channel_id).fetch_message(
+                payload.message_id)
 
-        message = await self.bot.get_guild(payload.guild_id).get_channel(payload.channel_id).fetch_message(
-            payload.message_id)
+            # User can't upvote his own messages.
+            if payload.user_id == message.author.id:
+                await message.remove_reaction(payload.emoji, Object(payload.user_id))
+                return
 
-        # User can't upvote his own messages.
-        if payload.user_id == message.author.id:
-            await message.remove_reaction(payload.emoji, Object(payload.user_id))
-            return
-
-        await self.__reaction_event(payload.emoji, payload.channel_id, payload.message_id, payload.user_id,
-                                    add_upvote, add_downvote)
+            await self.__reaction_event(payload.emoji, message, payload.user_id, add_upvote, add_downvote)
 
     @commands.Cog.listener("on_raw_reaction_remove")
     async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent):
-        await self.__reaction_event(payload.emoji, payload.channel_id, payload.message_id, payload.user_id,
-                                    remove_upvote, remove_downvote)
+        if self.__target_channels(payload.channel_id, payload.guild_id):
+            message = await self.bot.get_guild(payload.guild_id).get_channel(payload.channel_id).fetch_message(
+                payload.message_id)
+            await self.__reaction_event(payload.emoji, message, payload.user_id, remove_upvote, remove_downvote)
 
-    async def __reaction_event(self, emoji: discord.PartialEmoji, channel_id: int, message_id: int,
+    async def __reaction_event(self, emoji: discord.PartialEmoji, message: discord.Message,
                                member_id: int, upvote_fun, downvote_fun):
         member = self.bot.get_user(member_id)
-        channel = self.bot.get_channel(channel_id)
-        author = (await channel.fetch_message(message_id)).author
+        channel = message.channel
+        author = message.author
         if self.__target_channels(channel.id, channel.guild.id):
             if not member.bot:
                 if author.id != member.id:
                     logger.debug(f"{member.name} {'added' if upvote_fun == add_upvote else 'removed'} "
-                                 f"' {emoji} ' emoji to {author.name} message id: {message_id}")
+                                 f"' {emoji} ' emoji to {author.name} message id: {message.id}")
                     if emoji.name == UPVOTE_EMOJI:
                         upvote_fun(author)
                     elif emoji.name == DOWNVOTE_EMOJI:
