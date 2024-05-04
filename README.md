@@ -1,3 +1,3 @@
 # discord.py_bot
 
-Simple bot created for discord server https://discord.gg/9N5J3QYxhn.
+Simple maintenance bot created for discord server https://discord.gg/9N5J3QYxhn.
